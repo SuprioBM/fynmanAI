@@ -1,7 +1,8 @@
 import { PropsWithChildren } from "react";
+import { AuthPageShell } from "./_components/AuthPageShell";
 
 const AuthLayout = ({ children }: PropsWithChildren) => {
-	return <main className='flex w-full justify-center'>{children}</main>;
+	return <AuthPageShell>{children}</AuthPageShell>;
 };
 
 export default AuthLayout;
