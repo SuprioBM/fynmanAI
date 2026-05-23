@@ -10,11 +10,4 @@
  */
 export type * from './models/User.ts'
 export type * from './models/RefreshToken.ts'
-export type * from './models/Like.ts'
-export type * from './models/Favorite.ts'
-export type * from './models/Tryon.ts'
-export type * from './models/Job.ts'
-export type * from './models/ProductSearch.ts'
-export type * from './models/Product.ts'
-export type * from './models/ProductVariant.ts'
 export type * from './commonInputTypes.ts'

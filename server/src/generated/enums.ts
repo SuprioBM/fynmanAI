@@ -9,26 +9,6 @@
 * 🟢 You can import this file directly.
 */
 
-export const JobType = {
-  IMAGE_TRYON: 'IMAGE_TRYON',
-  IMAGE_EDIT: 'IMAGE_EDIT',
-  MODEL: 'MODEL'
-} as const
-
-export type JobType = (typeof JobType)[keyof typeof JobType]
-
-
-export const JobStatus = {
-  QUEUED: 'QUEUED',
-  PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED'
-} as const
-
-export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus]
-
-
 export const Gender = {
   MALE: 'MALE',
   FEMALE: 'FEMALE',
@@ -36,11 +16,3 @@ export const Gender = {
 } as const
 
 export type Gender = (typeof Gender)[keyof typeof Gender]
-
-
-export const PROVIDER = {
-  CLAID: 'CLAID',
-  PIXAZO: 'PIXAZO'
-} as const
-
-export type PROVIDER = (typeof PROVIDER)[keyof typeof PROVIDER]

@@ -4,8 +4,6 @@ import {
   findUserByEmail,
   findUserById,
   findUserByVerificationToken,
-  getFavoriteProductsDB,
-  getLikedProductsDB,
   updateUserPassword,
   updateUserProfile,
   verifyUserEmail,
@@ -326,70 +324,3 @@ export const deleteAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getFavoriteProducts = async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const { limit = 20, skip = 0 } = req.query as {
-      limit?: string;
-      skip?: string;
-    };
-
-    const products = await getFavoriteProductsDB(
-      req.userId,
-      Number(limit),
-      Number(skip)
-    );
-    if (!products.length) {
-      return res.status(200).json({
-        status: 'empty',
-        results: [],
-      });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      results: products,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: 'failed to fetch favorite products',
-    });
-  }
-};
-
-export const getLikedProducts = async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const { limit = 20, skip = 0 } = req.query as {
-      limit?: string;
-      skip?: string;
-    };
-
-    const products = await getLikedProductsDB(
-      req.userId,
-      Number(limit),
-      Number(skip)
-    );
-    if (!products.length) {
-      return res.status(200).json({
-        status: 'empty',
-        results: [],
-      });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      results: products,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: 'failed to fetch liked products',
-    });
-  }
-};

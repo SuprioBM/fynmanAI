@@ -52,14 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
-  RefreshToken: 'RefreshToken',
-  Like: 'Like',
-  Favorite: 'Favorite',
-  Tryon: 'Tryon',
-  Job: 'Job',
-  ProductSearch: 'ProductSearch',
-  Product: 'Product',
-  ProductVariant: 'ProductVariant'
+  RefreshToken: 'RefreshToken'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -118,133 +111,12 @@ export const RefreshTokenScalarFieldEnum = {
 export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
 
 
-export const LikeScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  productId: 'productId',
-  status: 'status'
-} as const
-
-export type LikeScalarFieldEnum = (typeof LikeScalarFieldEnum)[keyof typeof LikeScalarFieldEnum]
-
-
-export const FavoriteScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  tryonId: 'tryonId',
-  productId: 'productId',
-  status: 'status'
-} as const
-
-export type FavoriteScalarFieldEnum = (typeof FavoriteScalarFieldEnum)[keyof typeof FavoriteScalarFieldEnum]
-
-
-export const TryonScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  productIds: 'productIds',
-  jobId: 'jobId',
-  resultUrl: 'resultUrl',
-  tryonType: 'tryonType',
-  provider: 'provider',
-  isFavorite: 'isFavorite',
-  isPublic: 'isPublic',
-  viewCount: 'viewCount',
-  createdAt: 'createdAt',
-  deletedAt: 'deletedAt'
-} as const
-
-export type TryonScalarFieldEnum = (typeof TryonScalarFieldEnum)[keyof typeof TryonScalarFieldEnum]
-
-
-export const JobScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  productId: 'productId',
-  variantId: 'variantId',
-  userPrompt: 'userPrompt',
-  jobType: 'jobType',
-  status: 'status',
-  thirdPartyTaskId: 'thirdPartyTaskId',
-  outputresultUrl: 'outputresultUrl',
-  maxRetries: 'maxRetries',
-  retryCount: 'retryCount',
-  retryDelayMs: 'retryDelayMs',
-  createdAt: 'createdAt',
-  startedAt: 'startedAt',
-  completedAt: 'completedAt',
-  tryonId: 'tryonId'
-} as const
-
-export type JobScalarFieldEnum = (typeof JobScalarFieldEnum)[keyof typeof JobScalarFieldEnum]
-
-
-export const ProductSearchScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  prompt: 'prompt',
-  intentKey: 'intentKey',
-  parsedParams: 'parsedParams',
-  location: 'location',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type ProductSearchScalarFieldEnum = (typeof ProductSearchScalarFieldEnum)[keyof typeof ProductSearchScalarFieldEnum]
-
-
-export const ProductScalarFieldEnum = {
-  id: 'id',
-  searchId: 'searchId',
-  title: 'title',
-  source: 'source',
-  googlelink: 'googlelink',
-  price: 'price',
-  defaultImageUrl: 'defaultImageUrl',
-  rating: 'rating',
-  ratingCount: 'ratingCount',
-  searchProductId: 'searchProductId',
-  preferedGender: 'preferedGender',
-  ageRange: 'ageRange',
-  culturalTags: 'culturalTags',
-  extarnalTags: 'extarnalTags',
-  location: 'location',
-  category: 'category',
-  viewCount: 'viewCount',
-  likeCount: 'likeCount',
-  orderCount: 'orderCount',
-  trendingScore: 'trendingScore',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
-
-
-export const ProductVariantScalarFieldEnum = {
-  id: 'id',
-  productId: 'productId',
-  imageUrl: 'imageUrl',
-  variantData: 'variantData'
-} as const
-
-export type ProductVariantScalarFieldEnum = (typeof ProductVariantScalarFieldEnum)[keyof typeof ProductVariantScalarFieldEnum]
-
-
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-export const NullableJsonNullValueInput = {
-  DbNull: DbNull,
-  JsonNull: JsonNull
-} as const
-
-export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -261,13 +133,4 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

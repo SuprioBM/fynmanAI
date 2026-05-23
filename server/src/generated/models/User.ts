@@ -286,7 +286,7 @@ export type UserGroupByOutputType = {
   _max: UserMaxAggregateOutputType | null
 }
 
-type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
+export type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<UserGroupByOutputType, T['by']> &
       {
@@ -325,11 +325,6 @@ export type UserWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
-  productSearches?: Prisma.ProductSearchListRelationFilter
-  generationJobs?: Prisma.JobListRelationFilter
-  likes?: Prisma.LikeListRelationFilter
-  favorite?: Prisma.FavoriteListRelationFilter
-  tryons?: Prisma.TryonListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -353,11 +348,6 @@ export type UserOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   refreshTokens?: Prisma.RefreshTokenOrderByRelationAggregateInput
-  productSearches?: Prisma.ProductSearchOrderByRelationAggregateInput
-  generationJobs?: Prisma.JobOrderByRelationAggregateInput
-  likes?: Prisma.LikeOrderByRelationAggregateInput
-  favorite?: Prisma.FavoriteOrderByRelationAggregateInput
-  tryons?: Prisma.TryonOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -385,11 +375,6 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   refreshTokens?: Prisma.RefreshTokenListRelationFilter
-  productSearches?: Prisma.ProductSearchListRelationFilter
-  generationJobs?: Prisma.JobListRelationFilter
-  likes?: Prisma.LikeListRelationFilter
-  favorite?: Prisma.FavoriteListRelationFilter
-  tryons?: Prisma.TryonListRelationFilter
 }, "id" | "email" | "oauthProvider_oauthId">
 
 export type UserOrderByWithAggregationInput = {
@@ -465,11 +450,6 @@ export type UserCreateInput = {
   updatedAt?: Date | string
   deletedAt?: Date | string | null
   refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -493,11 +473,6 @@ export type UserUncheckedCreateInput = {
   updatedAt?: Date | string
   deletedAt?: Date | string | null
   refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -521,11 +496,6 @@ export type UserUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -549,11 +519,6 @@ export type UserUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -712,11 +677,6 @@ export type UserScalarRelationFilter = {
   isNot?: Prisma.UserWhereInput
 }
 
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
-}
-
 export type UserCreateinterestsInput = {
   set: string[]
 }
@@ -772,78 +732,6 @@ export type UserUpdateOneRequiredWithoutRefreshTokensNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutRefreshTokensInput, Prisma.UserUpdateWithoutRefreshTokensInput>, Prisma.UserUncheckedUpdateWithoutRefreshTokensInput>
 }
 
-export type UserCreateNestedOneWithoutLikesInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutLikesInput, Prisma.UserUncheckedCreateWithoutLikesInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLikesInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutLikesNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutLikesInput, Prisma.UserUncheckedCreateWithoutLikesInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLikesInput
-  upsert?: Prisma.UserUpsertWithoutLikesInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLikesInput, Prisma.UserUpdateWithoutLikesInput>, Prisma.UserUncheckedUpdateWithoutLikesInput>
-}
-
-export type UserCreateNestedOneWithoutFavoriteInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteInput, Prisma.UserUncheckedCreateWithoutFavoriteInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutFavoriteNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteInput, Prisma.UserUncheckedCreateWithoutFavoriteInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteInput
-  upsert?: Prisma.UserUpsertWithoutFavoriteInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFavoriteInput, Prisma.UserUpdateWithoutFavoriteInput>, Prisma.UserUncheckedUpdateWithoutFavoriteInput>
-}
-
-export type UserCreateNestedOneWithoutTryonsInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutTryonsInput, Prisma.UserUncheckedCreateWithoutTryonsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTryonsInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutTryonsNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutTryonsInput, Prisma.UserUncheckedCreateWithoutTryonsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTryonsInput
-  upsert?: Prisma.UserUpsertWithoutTryonsInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTryonsInput, Prisma.UserUpdateWithoutTryonsInput>, Prisma.UserUncheckedUpdateWithoutTryonsInput>
-}
-
-export type UserCreateNestedOneWithoutGenerationJobsInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutGenerationJobsInput, Prisma.UserUncheckedCreateWithoutGenerationJobsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGenerationJobsInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutGenerationJobsNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutGenerationJobsInput, Prisma.UserUncheckedCreateWithoutGenerationJobsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGenerationJobsInput
-  upsert?: Prisma.UserUpsertWithoutGenerationJobsInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGenerationJobsInput, Prisma.UserUpdateWithoutGenerationJobsInput>, Prisma.UserUncheckedUpdateWithoutGenerationJobsInput>
-}
-
-export type UserCreateNestedOneWithoutProductSearchesInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutProductSearchesInput, Prisma.UserUncheckedCreateWithoutProductSearchesInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutProductSearchesInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneWithoutProductSearchesNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutProductSearchesInput, Prisma.UserUncheckedCreateWithoutProductSearchesInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutProductSearchesInput
-  upsert?: Prisma.UserUpsertWithoutProductSearchesInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutProductSearchesInput, Prisma.UserUpdateWithoutProductSearchesInput>, Prisma.UserUncheckedUpdateWithoutProductSearchesInput>
-}
-
 export type UserCreateWithoutRefreshTokensInput = {
   id?: string
   email: string
@@ -864,11 +752,6 @@ export type UserCreateWithoutRefreshTokensInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRefreshTokensInput = {
@@ -891,11 +774,6 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -934,11 +812,6 @@ export type UserUpdateWithoutRefreshTokensInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRefreshTokensInput = {
@@ -961,631 +834,6 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutLikesInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutLikesInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutLikesInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutLikesInput, Prisma.UserUncheckedCreateWithoutLikesInput>
-}
-
-export type UserUpsertWithoutLikesInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutLikesInput, Prisma.UserUncheckedUpdateWithoutLikesInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutLikesInput, Prisma.UserUncheckedCreateWithoutLikesInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutLikesInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutLikesInput, Prisma.UserUncheckedUpdateWithoutLikesInput>
-}
-
-export type UserUpdateWithoutLikesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutLikesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutFavoriteInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutFavoriteInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutFavoriteInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteInput, Prisma.UserUncheckedCreateWithoutFavoriteInput>
-}
-
-export type UserUpsertWithoutFavoriteInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteInput, Prisma.UserUncheckedUpdateWithoutFavoriteInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteInput, Prisma.UserUncheckedCreateWithoutFavoriteInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutFavoriteInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteInput, Prisma.UserUncheckedUpdateWithoutFavoriteInput>
-}
-
-export type UserUpdateWithoutFavoriteInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutFavoriteInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutTryonsInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutTryonsInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutTryonsInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutTryonsInput, Prisma.UserUncheckedCreateWithoutTryonsInput>
-}
-
-export type UserUpsertWithoutTryonsInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutTryonsInput, Prisma.UserUncheckedUpdateWithoutTryonsInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutTryonsInput, Prisma.UserUncheckedCreateWithoutTryonsInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutTryonsInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutTryonsInput, Prisma.UserUncheckedUpdateWithoutTryonsInput>
-}
-
-export type UserUpdateWithoutTryonsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutTryonsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutGenerationJobsInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutGenerationJobsInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  productSearches?: Prisma.ProductSearchUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutGenerationJobsInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutGenerationJobsInput, Prisma.UserUncheckedCreateWithoutGenerationJobsInput>
-}
-
-export type UserUpsertWithoutGenerationJobsInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutGenerationJobsInput, Prisma.UserUncheckedUpdateWithoutGenerationJobsInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutGenerationJobsInput, Prisma.UserUncheckedCreateWithoutGenerationJobsInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutGenerationJobsInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutGenerationJobsInput, Prisma.UserUncheckedUpdateWithoutGenerationJobsInput>
-}
-
-export type UserUpdateWithoutGenerationJobsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutGenerationJobsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  productSearches?: Prisma.ProductSearchUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutProductSearchesInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutProductSearchesInput = {
-  id?: string
-  email: string
-  passwordHash?: string | null
-  name: string
-  avatarUrl?: string | null
-  userBodyImageUrl?: string | null
-  age?: number | null
-  ethnicity?: string | null
-  gender?: $Enums.Gender
-  interests?: Prisma.UserCreateinterestsInput | string[]
-  location?: string | null
-  verificationToken?: string | null
-  emailVerified?: boolean
-  isActive?: boolean
-  oauthProvider?: string | null
-  oauthId?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  generationJobs?: Prisma.JobUncheckedCreateNestedManyWithoutUserInput
-  likes?: Prisma.LikeUncheckedCreateNestedManyWithoutUserInput
-  favorite?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput
-  tryons?: Prisma.TryonUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutProductSearchesInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutProductSearchesInput, Prisma.UserUncheckedCreateWithoutProductSearchesInput>
-}
-
-export type UserUpsertWithoutProductSearchesInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutProductSearchesInput, Prisma.UserUncheckedUpdateWithoutProductSearchesInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutProductSearchesInput, Prisma.UserUncheckedCreateWithoutProductSearchesInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutProductSearchesInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutProductSearchesInput, Prisma.UserUncheckedUpdateWithoutProductSearchesInput>
-}
-
-export type UserUpdateWithoutProductSearchesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutProductSearchesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  userBodyImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  ethnicity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  gender?: Prisma.EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-  interests?: Prisma.UserUpdateinterestsInput | string[]
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  verificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  oauthProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  oauthId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  generationJobs?: Prisma.JobUncheckedUpdateManyWithoutUserNestedInput
-  likes?: Prisma.LikeUncheckedUpdateManyWithoutUserNestedInput
-  favorite?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput
-  tryons?: Prisma.TryonUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1595,20 +843,10 @@ export type UserUncheckedUpdateWithoutProductSearchesInput = {
 
 export type UserCountOutputType = {
   refreshTokens: number
-  productSearches: number
-  generationJobs: number
-  likes: number
-  favorite: number
-  tryons: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
-  productSearches?: boolean | UserCountOutputTypeCountProductSearchesArgs
-  generationJobs?: boolean | UserCountOutputTypeCountGenerationJobsArgs
-  likes?: boolean | UserCountOutputTypeCountLikesArgs
-  favorite?: boolean | UserCountOutputTypeCountFavoriteArgs
-  tryons?: boolean | UserCountOutputTypeCountTryonsArgs
 }
 
 /**
@@ -1626,41 +864,6 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type UserCountOutputTypeCountRefreshTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.RefreshTokenWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountProductSearchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ProductSearchWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountGenerationJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.JobWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountLikesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.LikeWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountFavoriteArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.FavoriteWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountTryonsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.TryonWhereInput
 }
 
 
@@ -1685,11 +888,6 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   deletedAt?: boolean
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
-  productSearches?: boolean | Prisma.User$productSearchesArgs<ExtArgs>
-  generationJobs?: boolean | Prisma.User$generationJobsArgs<ExtArgs>
-  likes?: boolean | Prisma.User$likesArgs<ExtArgs>
-  favorite?: boolean | Prisma.User$favoriteArgs<ExtArgs>
-  tryons?: boolean | Prisma.User$tryonsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1762,11 +960,6 @@ export type UserSelectScalar = {
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "avatarUrl" | "userBodyImageUrl" | "age" | "ethnicity" | "gender" | "interests" | "location" | "verificationToken" | "emailVerified" | "isActive" | "oauthProvider" | "oauthId" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>
-  productSearches?: boolean | Prisma.User$productSearchesArgs<ExtArgs>
-  generationJobs?: boolean | Prisma.User$generationJobsArgs<ExtArgs>
-  likes?: boolean | Prisma.User$likesArgs<ExtArgs>
-  favorite?: boolean | Prisma.User$favoriteArgs<ExtArgs>
-  tryons?: boolean | Prisma.User$tryonsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1776,11 +969,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "User"
   objects: {
     refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
-    productSearches: Prisma.$ProductSearchPayload<ExtArgs>[]
-    generationJobs: Prisma.$JobPayload<ExtArgs>[]
-    likes: Prisma.$LikePayload<ExtArgs>[]
-    favorite: Prisma.$FavoritePayload<ExtArgs>[]
-    tryons: Prisma.$TryonPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2197,11 +1385,6 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   refreshTokens<T extends Prisma.User$refreshTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  productSearches<T extends Prisma.User$productSearchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$productSearchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductSearchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  generationJobs<T extends Prisma.User$generationJobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$generationJobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$JobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  likes<T extends Prisma.User$likesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$likesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LikePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  favorite<T extends Prisma.User$favoriteArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$favoriteArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  tryons<T extends Prisma.User$tryonsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tryonsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TryonPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2446,6 +1629,11 @@ export type UserFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Skip the first `n` Users.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Users.
+   */
   distinct?: Prisma.UserScalarFieldEnum | Prisma.UserScalarFieldEnum[]
 }
 
@@ -2659,126 +1847,6 @@ export type User$refreshTokensArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.RefreshTokenScalarFieldEnum | Prisma.RefreshTokenScalarFieldEnum[]
-}
-
-/**
- * User.productSearches
- */
-export type User$productSearchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ProductSearch
-   */
-  select?: Prisma.ProductSearchSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the ProductSearch
-   */
-  omit?: Prisma.ProductSearchOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.ProductSearchInclude<ExtArgs> | null
-  where?: Prisma.ProductSearchWhereInput
-  orderBy?: Prisma.ProductSearchOrderByWithRelationInput | Prisma.ProductSearchOrderByWithRelationInput[]
-  cursor?: Prisma.ProductSearchWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.ProductSearchScalarFieldEnum | Prisma.ProductSearchScalarFieldEnum[]
-}
-
-/**
- * User.generationJobs
- */
-export type User$generationJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Job
-   */
-  select?: Prisma.JobSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Job
-   */
-  omit?: Prisma.JobOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.JobInclude<ExtArgs> | null
-  where?: Prisma.JobWhereInput
-  orderBy?: Prisma.JobOrderByWithRelationInput | Prisma.JobOrderByWithRelationInput[]
-  cursor?: Prisma.JobWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.JobScalarFieldEnum | Prisma.JobScalarFieldEnum[]
-}
-
-/**
- * User.likes
- */
-export type User$likesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Like
-   */
-  select?: Prisma.LikeSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Like
-   */
-  omit?: Prisma.LikeOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.LikeInclude<ExtArgs> | null
-  where?: Prisma.LikeWhereInput
-  orderBy?: Prisma.LikeOrderByWithRelationInput | Prisma.LikeOrderByWithRelationInput[]
-  cursor?: Prisma.LikeWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.LikeScalarFieldEnum | Prisma.LikeScalarFieldEnum[]
-}
-
-/**
- * User.favorite
- */
-export type User$favoriteArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Favorite
-   */
-  select?: Prisma.FavoriteSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Favorite
-   */
-  omit?: Prisma.FavoriteOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.FavoriteInclude<ExtArgs> | null
-  where?: Prisma.FavoriteWhereInput
-  orderBy?: Prisma.FavoriteOrderByWithRelationInput | Prisma.FavoriteOrderByWithRelationInput[]
-  cursor?: Prisma.FavoriteWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.FavoriteScalarFieldEnum | Prisma.FavoriteScalarFieldEnum[]
-}
-
-/**
- * User.tryons
- */
-export type User$tryonsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Tryon
-   */
-  select?: Prisma.TryonSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Tryon
-   */
-  omit?: Prisma.TryonOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.TryonInclude<ExtArgs> | null
-  where?: Prisma.TryonWhereInput
-  orderBy?: Prisma.TryonOrderByWithRelationInput | Prisma.TryonOrderByWithRelationInput[]
-  cursor?: Prisma.TryonWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.TryonScalarFieldEnum | Prisma.TryonScalarFieldEnum[]
 }
 
 /**

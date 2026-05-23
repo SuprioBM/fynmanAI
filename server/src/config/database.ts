@@ -1,17 +1,17 @@
-import { PrismaPg } from '@prisma/adapter-pg';
+import { DATABASE_URL, NODE_ENV } from '#src/constant.ts';
 import { PrismaClient } from '../generated/client.ts';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const node_env = process.env.NODE_ENV;
+const connectionString = `${DATABASE_URL}`;
 
-// const poolDB =
-//   node_env === 'development'
-//     ? process.env['DATABASE_URL_LOCAL']
-//     : process.env['DATABASE_URL_CLOUD'];
-const poolDB = process.env.DATABASE_URL;
+if (!connectionString) {
+  if (NODE_ENV === 'development')
+    console.warn(
+      'WARNING: $DATABASE_URL is not set. Prisma client will still be created but may fail on usage.'
+    );
+}
 
-const pool = new PrismaPg({
-  connectionString: poolDB || './dev:sql.db',
-});
-const prisma = new PrismaClient({ adapter: pool });
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;

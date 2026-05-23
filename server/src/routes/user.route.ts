@@ -2,8 +2,6 @@ import {
   changePassword,
   deleteAccount,
   forgotPassword,
-  getFavoriteProducts,
-  getLikedProducts,
   getProfile,
   resendVerificationEmail,
   resetPassword,
@@ -23,7 +21,5 @@ router.get('/me', getProfile);
 router.patch('/me', updateUserProfileData);
 router.post('/change-password', changePassword);
 router.delete('/delete-account', deleteAccount);
-router.get('/get-favorites', getFavoriteProducts);
-router.get('/get-liked-products', getLikedProducts);
 
 export default router;
