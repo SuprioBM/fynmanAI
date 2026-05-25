@@ -25,26 +25,7 @@ const Header = async () => {
 					</h2>
 				</Link>
 				<nav className='hidden md:flex items-center gap-10'>
-					<Link
-						href='/discover'
-						className='text-slate-300 hover:text-primary transition-colors text-sm font-medium'
-					>
-						Discover
-					</Link>
-					<Link
-						href='/trending'
-						className='text-slate-300 hover:text-primary transition-colors text-sm font-medium'
-					>
-						Trending
-					</Link>
-					{user ? (
-						<Link
-							href='/tryon'
-							className='text-slate-300 hover:text-primary transition-colors text-sm font-medium'
-						>
-							TryOn
-						</Link>
-					) : null}
+					Nav Links
 				</nav>
 				<div className='flex items-center gap-4'>
 					{user ? (

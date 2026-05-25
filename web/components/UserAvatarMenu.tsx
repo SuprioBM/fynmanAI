@@ -14,14 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Session } from "@/types/auth";
 
-const USER_LINKS = [
-	{ href: "/user/dashboard", label: "Dashboard" },
-	{ href: "/user/wardrobe", label: "Wardrobe" },
-	{ href: "/user/favourite", label: "Favourite" },
-	{ href: "/user/liked", label: "Liked" },
-	{ href: "/user/update-pics", label: "Update Pics" },
-	{ href: "/user/settings", label: "Settings" },
-];
+const USER_LINKS = [{ href: "/user/dashboard", label: "Dashboard" }];
 
 type UserAvatarMenuProps = {
 	user: Session["user"];
@@ -45,9 +38,9 @@ export function UserAvatarMenu({ user, signOutAction }: UserAvatarMenuProps) {
 			<DropdownMenuTrigger asChild>
 				<button
 					type='button'
-					className='flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-2 py-2 text-left transition-all hover:border-primary/40 hover:bg-primary/10'
+					className='flex items-center justify-center rounded-full p-0 text-left transition-all hover:opacity-90'
 				>
-					<span className='relative flex size-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-background/80'>
+					<span className='relative flex size-12 shrink-0 overflow-hidden rounded-full'>
 						{user.avatarUrl ? (
 							<Image
 								src={user.avatarUrl}
