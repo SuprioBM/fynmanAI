@@ -89,6 +89,7 @@ jest.unstable_mockModule('passport', () => ({
 
 // 3. Dynamic import of the app
 const { default: app } = await import('#src/app.ts');
+const authBase = '/api/auth';
 
 describe('Auth routes', () => {
   beforeEach(() => {
@@ -102,7 +103,7 @@ describe('Auth routes', () => {
 
   describe('POST /auth/signup', () => {
     it('returns 400 when required fields are missing', async () => {
-      const response = await request(app).post('/auth/signup').send({});
+      const response = await request(app).post(`${authBase}/signup`).send({});
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('message');
@@ -111,7 +112,7 @@ describe('Auth routes', () => {
 
     it('returns 400 when name is too short', async () => {
       const response = await request(app)
-        .post('/auth/signup')
+        .post(`${authBase}/signup`)
         .send({ email: 'test@example.com', password: 'Password1!', name: 'A' });
 
       expect(response.status).toBe(400);
@@ -122,7 +123,7 @@ describe('Auth routes', () => {
     });
 
     it('returns 400 when password is too weak', async () => {
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'weak',
         name: 'John Doe',
@@ -133,7 +134,7 @@ describe('Auth routes', () => {
     });
 
     it('returns 400 when password lacks special character', async () => {
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password1',
         name: 'John Doe',
@@ -144,7 +145,7 @@ describe('Auth routes', () => {
     });
 
     it('returns 400 when password lacks number', async () => {
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password!',
         name: 'John Doe',
@@ -155,7 +156,7 @@ describe('Auth routes', () => {
     });
 
     it('returns 400 when email is invalid', async () => {
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'not-an-email',
         password: 'Password1!',
         name: 'John Doe',
@@ -171,7 +172,7 @@ describe('Auth routes', () => {
         passwordHash: 'hashed-pass',
       });
 
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password1!',
         name: 'John Doe',
@@ -192,7 +193,7 @@ describe('Auth routes', () => {
         isActive: false,
       });
 
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password1!',
         name: 'John Doe',
@@ -225,7 +226,7 @@ describe('Auth routes', () => {
       mockHashing.mockResolvedValue('linked-hashed-pass');
       mockUpdateUserPassword.mockResolvedValue(undefined);
 
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password1!',
         name: 'John Doe',
@@ -248,7 +249,7 @@ describe('Auth routes', () => {
       mockHashing.mockResolvedValue('hashed-pass');
       mockCreateUser.mockRejectedValue(new Error('db down'));
 
-      const response = await request(app).post('/auth/signup').send({
+      const response = await request(app).post(`${authBase}/signup`).send({
         email: 'test@example.com',
         password: 'Password1!',
         name: 'John Doe',
@@ -262,7 +263,7 @@ describe('Auth routes', () => {
   describe('POST /auth/signin', () => {
     it('returns 400 when password is too short', async () => {
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'test@example.com', password: 'short' });
 
       expect(response.status).toBe(400);
@@ -272,7 +273,7 @@ describe('Auth routes', () => {
 
     it('returns 400 when email is invalid', async () => {
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'not-an-email', password: 'Password1!' });
 
       expect(response.status).toBe(400);
@@ -283,7 +284,7 @@ describe('Auth routes', () => {
       mockFindUserByEmail.mockResolvedValue(null);
 
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'test@example.com', password: 'Password1!' });
 
       expect(response.status).toBe(400);
@@ -305,7 +306,7 @@ describe('Auth routes', () => {
       mockVerifyHash.mockResolvedValue(false);
 
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'test@example.com', password: 'WrongPass1!' });
 
       expect(response.status).toBe(400);
@@ -334,7 +335,7 @@ describe('Auth routes', () => {
       mockSaveRefreshToken.mockResolvedValue(undefined);
 
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'test@example.com', password: 'Password1!' });
 
       expect(response.status).toBe(200);
@@ -379,7 +380,7 @@ describe('Auth routes', () => {
       mockHashTokenCrypto.mockReturnValue('hashed-refresh');
 
       const response = await request(app)
-        .post('/auth/signin')
+        .post(`${authBase}/signin`)
         .send({ email: 'test@example.com', password: 'Password1!' });
 
       expect(response.body.data.user).toEqual({
@@ -394,7 +395,7 @@ describe('Auth routes', () => {
 
   describe('GET /auth/refresh', () => {
     it('returns 401 when refresh token cookie is missing', async () => {
-      const response = await request(app).get('/auth/refresh');
+      const response = await request(app).get(`${authBase}/refresh`);
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('message', 'Refresh token missing');
@@ -404,7 +405,7 @@ describe('Auth routes', () => {
       mockVerifyRefreshToken.mockResolvedValue(null);
 
       const response = await request(app)
-        .get('/auth/refresh')
+        .get(`${authBase}/refresh`)
         .set('Cookie', 'refreshToken=bad');
 
       expect(response.status).toBe(401);
@@ -417,7 +418,7 @@ describe('Auth routes', () => {
       mockFindRefreshToken.mockResolvedValue(null);
 
       const response = await request(app)
-        .get('/auth/refresh')
+        .get(`${authBase}/refresh`)
         .set('Cookie', 'refreshToken=valid');
 
       expect(response.status).toBe(401);
@@ -439,7 +440,7 @@ describe('Auth routes', () => {
       // mockInvalidateCache.mockResolvedValue(undefined);
 
       const response = await request(app)
-        .get('/auth/refresh')
+        .get(`${authBase}/refresh`)
         .set('Cookie', 'refreshToken=valid');
 
       expect(response.status).toBe(200);
@@ -467,7 +468,7 @@ describe('Auth routes', () => {
       });
 
       await request(app)
-        .get('/auth/refresh')
+        .get(`${authBase}/refresh`)
         .set('Cookie', 'refreshToken=valid');
 
       expect(mockRevokeSession).toHaveBeenCalledWith('user-1', 'old-session');
@@ -477,7 +478,7 @@ describe('Auth routes', () => {
 
   describe('GET /auth/signout', () => {
     it('returns 401 when missing auth header', async () => {
-      const response = await request(app).get('/auth/signout');
+      const response = await request(app).get(`${authBase}/signout`);
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('message', 'Unauthorized');
@@ -485,7 +486,7 @@ describe('Auth routes', () => {
 
     it('returns 401 when auth header is malformed', async () => {
       const response = await request(app)
-        .get('/auth/signout')
+        .get(`${authBase}/signout`)
         .set('Authorization', 'InvalidFormat');
 
       expect(response.status).toBe(401);
@@ -496,7 +497,7 @@ describe('Auth routes', () => {
       mockVerifyAccessToken.mockResolvedValue(null);
 
       const response = await request(app)
-        .get('/auth/signout')
+        .get(`${authBase}/signout`)
         .set('Authorization', 'Bearer invalid-token');
 
       expect(response.status).toBe(401);
@@ -514,11 +515,12 @@ describe('Auth routes', () => {
       mockClearTokens.mockResolvedValue(undefined);
 
       const response = await request(app)
-        .get('/auth/signout')
+        .get(`${authBase}/signout`)
         .set('Authorization', 'Bearer access-1');
 
       expect(response.status).toBe(200);
-      expect(response.text).toBe('Signout Success!');
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('message', 'Signout success');
       expect(mockDeleteCurrentRefreshToken).toHaveBeenCalledWith('session-1');
       expect(mockRevokeSession).toHaveBeenCalledWith('user-1', 'session-1');
       expect(mockInvalidateCache).toHaveBeenCalledWith(
@@ -536,7 +538,7 @@ describe('Auth routes', () => {
       mockIsValidSession.mockResolvedValue(true);
 
       await request(app)
-        .get('/auth/signout')
+        .get(`${authBase}/signout`)
         .set('Authorization', 'Bearer access-1');
 
       expect(mockInvalidateCache).toHaveBeenCalledWith(

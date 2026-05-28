@@ -55,6 +55,7 @@ export default [
       'logs/**',
       'prisma/**',
       'dist/**',
+      '.venv-markitdown/**',
       '.eslintrc.js',
       './src/generated/**',
     ],

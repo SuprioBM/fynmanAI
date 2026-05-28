@@ -7,7 +7,7 @@ import {
   getSessionById,
 } from '#src/services/session.service.ts';
 import { transcribeAudioBuffer } from '#src/services/stt.service.ts';
-import { preprocessTranscriptText } from '#src/services/transcript-preprocess.service.ts';
+import { preprocessTranscript } from '#src/services/transcript-preprocess.service.ts';
 import { maybeGenerateRealtimeFeedback } from '#src/services/evaluation.service.ts';
 import logger from '#config/logger.ts';
 
@@ -96,9 +96,16 @@ export const registerRealtimeSocket = (io: Server) => {
 
         const speakerLabel =
           payload?.speakerLabel || payload?.speaker || payload?.role || 'User';
-        const cleanedText = preprocessTranscriptText(transcript.text, {
-          speakerLabel,
-        });
+        const processedTranscript = preprocessTranscript(
+          {
+            raw: transcript.text,
+            speaker: speakerLabel,
+          },
+          {
+            speakerLabel,
+          }
+        );
+        const cleanedText = processedTranscript.cleanedText;
 
         const chunk = await appendTranscriptChunk({
           sessionId,
