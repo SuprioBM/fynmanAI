@@ -1,5 +1,5 @@
 {
-  "name": "tryora_server",
+  "name": "feynmanai-server",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -93,14 +93,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hirokr/Tryora.git"
+    "url": "git+https://github.com/[actual Link].git"
   },
   "bugs": {
-    "url": "https://github.com/hirokr/Tryora/issues"
+    "url": "https://github.com/[actual Link]/issues"
   },
-  "homepage": "https://github.com/hirokr/Tryora/blob/main/README.md",
+  "homepage": "https://github.com/[actual Link]/blob/main/README.md",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "Backend for Feynman AI with WebSocket sessions, STT, retrieval, and evaluation."
 }

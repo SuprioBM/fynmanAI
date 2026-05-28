@@ -1,15 +1,18 @@
-# tryora_web
+# Feynman AI Web
 
-To install dependencies:
+Frontend for the Feynman AI learning-by-teaching platform. It captures audio,
+streams sessions over WebSockets, and displays transcripts and probing
+questions.
 
-```bash
-bun install
-```
-
-To run:
+## Quick start
 
 ```bash
-bun run 
+npm install
+npm run dev
 ```
 
-This project was created using `bun init` in bun v1.3.14. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Common scripts
+
+- `npm run dev`
+- `npm run build`
+- `npm run start`
