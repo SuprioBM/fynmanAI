@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   appendTranscriptHandler,
   endSessionHandler,
+  getSessionReportHandler,
   requestFinalEvaluationHandler,
   requestRealtimeFeedbackHandler,
   startSessionHandler,
@@ -31,6 +32,7 @@ router.post(
   validateRequest(GenerateEvaluationSchema),
   requestFinalEvaluationHandler
 );
+router.get('/:sessionId/report', getSessionReportHandler);
 router.post('/:sessionId/end', endSessionHandler);
 
 export default router;

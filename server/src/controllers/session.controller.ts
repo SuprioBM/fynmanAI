@@ -7,9 +7,12 @@ import {
   endSession,
   getSessionById,
 } from '#src/services/session.service.ts';
+import { preprocessTranscriptText } from '#src/services/transcript-preprocess.service.ts';
 import {
   generateFinalEvaluation,
   generateRealtimeFeedback,
+  ensureFinalEvaluation,
+  getLatestFinalEvaluation,
 } from '#src/services/evaluation.service.ts';
 
 export const startSessionHandler = async (req: AuthRequest, res: Response) => {
@@ -42,6 +45,16 @@ export const startSessionHandler = async (req: AuthRequest, res: Response) => {
       data: { session },
     });
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.startsWith('Unsupported subject')
+    ) {
+      return sendApiError(res, {
+        status: 400,
+        message: error.message,
+      });
+    }
+
     return sendApiError(res, {
       status: 500,
       message: 'Failed to start session',
@@ -75,7 +88,7 @@ export const appendTranscriptHandler = async (
 
     const chunk = await appendTranscriptChunk({
       sessionId,
-      text,
+      text: preprocessTranscriptText(text),
       startTimeMs,
       endTimeMs,
     });
@@ -117,6 +130,7 @@ export const requestRealtimeFeedbackHandler = async (
       subject: session.subject || undefined,
       topic: session.topic || undefined,
       resourceIds: session.resources.map(item => item.resourceId),
+      goal: session.goal || undefined,
     });
 
     return sendApiSuccess(res, {
@@ -158,12 +172,14 @@ export const requestFinalEvaluationHandler = async (
             subject: session.subject || undefined,
             topic: session.topic || undefined,
             resourceIds: session.resources.map(item => item.resourceId),
+            goal: session.goal || undefined,
           })
         : await generateFinalEvaluation({
             sessionId,
             subject: session.subject || undefined,
             topic: session.topic || undefined,
             resourceIds: session.resources.map(item => item.resourceId),
+            goal: session.goal || undefined,
           });
 
     return sendApiSuccess(res, {
@@ -194,15 +210,60 @@ export const endSessionHandler = async (req: AuthRequest, res: Response) => {
     }
 
     const ended = await endSession(sessionId);
+    const finalEvaluation = await ensureFinalEvaluation({
+      sessionId,
+      subject: session.subject || undefined,
+      topic: session.topic || undefined,
+      resourceIds: session.resources.map(item => item.resourceId),
+      goal: session.goal || undefined,
+    });
 
     return sendApiSuccess(res, {
       message: 'Session ended',
-      data: { session: ended },
+      data: { session: ended, evaluation: finalEvaluation },
     });
   } catch (error) {
     return sendApiError(res, {
       status: 500,
       message: 'Failed to end session',
+    });
+  }
+};
+
+export const getSessionReportHandler = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.userId) {
+      return sendApiError(res, {
+        status: 401,
+        message: 'User not authenticated',
+      });
+    }
+
+    const { sessionId } = req.params as { sessionId: string };
+    const session = await getSessionById(sessionId);
+
+    if (!session || session.userId !== req.userId) {
+      return sendApiError(res, { status: 404, message: 'Session not found' });
+    }
+
+    const evaluation = await getLatestFinalEvaluation(sessionId);
+    if (!evaluation) {
+      return sendApiError(res, {
+        status: 404,
+        message: 'Final evaluation not available',
+      });
+    }
+
+    return sendApiSuccess(res, {
+      data: { evaluation },
+    });
+  } catch (error) {
+    return sendApiError(res, {
+      status: 500,
+      message: 'Failed to fetch session report',
     });
   }
 };

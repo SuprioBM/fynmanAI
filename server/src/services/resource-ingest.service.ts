@@ -1,29 +1,63 @@
 import crypto from 'node:crypto';
 import { generateEmbedding } from '#src/services/ai/ai.service.ts';
 import {
+  createEmbeddingRecord,
   createResourceChunk,
+  getResourceById,
   updateResourceStatus,
+  updateResourceFields,
 } from '#src/services/resource.service.ts';
 import {
   ensureCollection,
   getQdrantCollection,
   upsertPoints,
 } from '#src/services/qdrant.service.ts';
+import {
+  normalizePunctuationSpacing,
+  normalizeRepeatedPunctuation,
+  normalizeUnicode,
+  normalizeWhitespace,
+  tokenizeWords,
+} from '#src/transcript/utils/text.ts';
+import { env } from '#config/env.ts';
 
-const chunkText = (text: string, size = 1000, overlap = 150): string[] => {
+const cleanResourceText = (text: string): string => {
+  let result = normalizeUnicode(text, 'NFKC');
+  result = normalizeWhitespace(result);
+  result = normalizePunctuationSpacing(result);
+  result = normalizeRepeatedPunctuation(result, 3);
+  return result.trim();
+};
+
+const chunkText = (
+  text: string,
+  size = env.RESOURCE_CHUNK_TOKENS || 600,
+  overlap = env.RESOURCE_CHUNK_OVERLAP || 80
+): string[] => {
+  const spans = tokenizeWords(text);
+  if (!spans.length) {
+    return [];
+  }
+
+  const safeOverlap = Math.min(Math.max(0, overlap), Math.max(0, size - 1));
   const chunks: string[] = [];
   let cursor = 0;
 
-  while (cursor < text.length) {
-    const end = Math.min(cursor + size, text.length);
-    const chunk = text.slice(cursor, end).trim();
+  while (cursor < spans.length) {
+    const end = Math.min(cursor + size, spans.length);
+    const startChar = spans[cursor].start;
+    const endChar = spans[end - 1].end;
+    const chunk = text.slice(startChar, endChar).trim();
     if (chunk.length) {
       chunks.push(chunk);
     }
-    cursor = end - overlap;
-    if (cursor < 0) {
-      cursor = 0;
+
+    if (end === spans.length) {
+      break;
     }
+
+    const nextCursor = end - safeOverlap;
+    cursor = nextCursor <= cursor ? end : nextCursor;
   }
 
   return chunks;
@@ -38,10 +72,21 @@ export const ingestResourceText = async (params: {
   await updateResourceStatus(params.resourceId, 'PROCESSING');
 
   try {
-    const chunks = chunkText(params.text);
+    const resource = await getResourceById(params.resourceId);
+    const cleanedText = cleanResourceText(params.text);
+    const subject = params.subject || resource?.subject || undefined;
+    const topic = params.topic || resource?.topic || undefined;
+    const chunks = chunkText(cleanedText);
     if (!chunks.length) {
       throw new Error('No text content to ingest');
     }
+
+    await updateResourceFields({
+      resourceId: params.resourceId,
+      parsedText: cleanedText,
+      filePath: resource?.filePath || resource?.storageKey || null,
+      storageKey: resource?.storageKey || null,
+    });
 
     const collectionName = getQdrantCollection();
     const firstEmbedding = await generateEmbedding(chunks[0]);
@@ -53,10 +98,13 @@ export const ingestResourceText = async (params: {
         vector: firstEmbedding.embedding,
         payload: {
           resourceId: params.resourceId,
-          subject: params.subject,
-          topic: params.topic,
+          subject,
+          topic,
           chunkIndex: 0,
           text: chunks[0],
+          resourceTitle: resource?.title,
+          sourceUrl: resource?.sourceUrl,
+          storageKey: resource?.storageKey,
         },
       },
     ];
@@ -70,9 +118,18 @@ export const ingestResourceText = async (params: {
       embeddingModel: firstEmbedding.model,
       vectorId: String(points[0].id),
       metadata: {
-        subject: params.subject,
-        topic: params.topic,
+        subject,
+        topic,
+        sourceUrl: resource?.sourceUrl,
+        storageKey: resource?.storageKey,
       },
+    });
+
+    await createEmbeddingRecord({
+      resourceId: params.resourceId,
+      resourceChunkId: String(points[0].id),
+      vector: firstEmbedding.embedding,
+      model: firstEmbedding.model,
     });
 
     for (let index = 1; index < chunks.length; index += 1) {
@@ -86,10 +143,13 @@ export const ingestResourceText = async (params: {
           vector: embedding.embedding,
           payload: {
             resourceId: params.resourceId,
-            subject: params.subject,
-            topic: params.topic,
+            subject,
+            topic,
             chunkIndex: index,
             text: chunkTextValue,
+            resourceTitle: resource?.title,
+            sourceUrl: resource?.sourceUrl,
+            storageKey: resource?.storageKey,
           },
         },
       ]);
@@ -102,9 +162,18 @@ export const ingestResourceText = async (params: {
         embeddingModel: embedding.model,
         vectorId: chunkId,
         metadata: {
-          subject: params.subject,
-          topic: params.topic,
+          subject,
+          topic,
+          sourceUrl: resource?.sourceUrl,
+          storageKey: resource?.storageKey,
         },
+      });
+
+      await createEmbeddingRecord({
+        resourceId: params.resourceId,
+        resourceChunkId: chunkId,
+        vector: embedding.embedding,
+        model: embedding.model,
       });
     }
 

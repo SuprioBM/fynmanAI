@@ -8,8 +8,12 @@ import {
 } from '#src/services/session.service.ts';
 import { transcribeAudioBuffer } from '#src/services/stt.service.ts';
 import { preprocessTranscript } from '#src/services/transcript-preprocess.service.ts';
-import { maybeGenerateRealtimeFeedback } from '#src/services/evaluation.service.ts';
+import {
+  ensureFinalEvaluation,
+  maybeGenerateRealtimeFeedback,
+} from '#src/services/evaluation.service.ts';
 import logger from '#config/logger.ts';
+import { env } from '#config/env.ts';
 
 const getTokenFromSocket = (socket: Socket): string | null => {
   const authToken = socket.handshake.auth?.token;
@@ -71,8 +75,33 @@ export const registerRealtimeSocket = (io: Server) => {
           return;
         }
 
+        const session = await getSessionById(payload.sessionId);
+        if (!session) {
+          cb?.({ ok: false, error: 'Session not found' });
+          return;
+        }
+
         await endSession(payload.sessionId);
-        cb?.({ ok: true });
+        const finalEvaluation = await ensureFinalEvaluation({
+          sessionId: payload.sessionId,
+          subject: session.subject || undefined,
+          topic: session.topic || undefined,
+          resourceIds: session.resources.map(item => item.resourceId),
+          goal: session.goal || undefined,
+        });
+
+        if (finalEvaluation) {
+          io.to(payload.sessionId).emit('session:summary', {
+            sessionId: payload.sessionId,
+            evaluation: finalEvaluation,
+          });
+          io.to(payload.sessionId).emit('session_summary', {
+            sessionId: payload.sessionId,
+            evaluation: finalEvaluation,
+          });
+        }
+
+        cb?.({ ok: true, evaluation: finalEvaluation });
       } catch (error) {
         cb?.({ ok: false, error: 'Failed to end session' });
       }
@@ -84,6 +113,26 @@ export const registerRealtimeSocket = (io: Server) => {
         const audioBase64 = payload?.audioBase64;
         if (!sessionId || !audioBase64) {
           cb?.({ ok: false, error: 'sessionId and audioBase64 are required' });
+          return;
+        }
+
+        const now = Date.now();
+        const windowMs = 60_000;
+        const maxChunks = env.AUDIO_CHUNKS_PER_MINUTE || 60;
+        const windowStart = socket.data.audioWindowStart || now;
+        const elapsed = now - windowStart;
+        const resetWindow = elapsed >= windowMs;
+
+        if (resetWindow) {
+          socket.data.audioWindowStart = now;
+          socket.data.audioChunkCount = 0;
+        }
+
+        const nextCount = (socket.data.audioChunkCount || 0) + 1;
+        socket.data.audioChunkCount = nextCount;
+
+        if (nextCount > maxChunks) {
+          cb?.({ ok: false, error: 'Audio chunk rate limit exceeded' });
           return;
         }
 
@@ -126,6 +175,7 @@ export const registerRealtimeSocket = (io: Server) => {
             subject: session.subject || undefined,
             topic: session.topic || undefined,
             resourceIds: session.resources.map(item => item.resourceId),
+            goal: session.goal || undefined,
           });
 
           if (evaluation) {

@@ -39,6 +39,23 @@ export const updateResourceStatus = async (
     data: { status },
   });
 
+export const updateResourceFields = async (params: {
+  resourceId: string;
+  parsedText?: string | null;
+  filePath?: string | null;
+  storageKey?: string | null;
+  metadata?: Record<string, unknown> | null;
+}) =>
+  prisma.resource.update({
+    where: { id: params.resourceId },
+    data: {
+      parsedText: params.parsedText ?? undefined,
+      filePath: params.filePath ?? undefined,
+      storageKey: params.storageKey ?? undefined,
+      metadata: params.metadata ?? undefined,
+    },
+  });
+
 export const getResourceById = async (resourceId: string) =>
   prisma.resource.findUnique({
     where: { id: resourceId },
@@ -81,5 +98,22 @@ export const createResourceChunk = async (params: {
       embeddingModel: params.embeddingModel,
       vectorId: params.vectorId,
       metadata: params.metadata ?? undefined,
+    },
+  });
+
+export const createEmbeddingRecord = async (params: {
+  resourceId?: string;
+  sessionId?: string;
+  resourceChunkId?: string;
+  vector: number[];
+  model?: string;
+}) =>
+  prisma.embedding.create({
+    data: {
+      resourceId: params.resourceId,
+      sessionId: params.sessionId,
+      resourceChunkId: params.resourceChunkId,
+      vector: params.vector,
+      model: params.model,
     },
   });

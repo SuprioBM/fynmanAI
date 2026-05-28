@@ -62,9 +62,10 @@ model User {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  refreshTokens RefreshToken[]
-  resources     Resource[]
-  sessions      Session[]
+  refreshTokens   RefreshToken[]
+  resources       Resource[]
+  sessions        Session[]
+  analyticsEvents AnalyticsEvent[]
 
   @@unique([oauthProvider, oauthId])
   @@index([email])
@@ -101,6 +102,8 @@ model Resource {
   mimeType   String?        @map("mime_type") @db.VarChar(100)
   sourceUrl  String?        @map("source_url") @db.Text
   storageKey String?        @map("storage_key") @db.Text
+  filePath   String?        @map("file_path") @db.Text
+  parsedText String?        @map("parsed_text") @db.Text
   status     ResourceStatus @default(PENDING)
   subject    String?        @db.VarChar(100)
   topic      String?        @db.VarChar(150)
@@ -109,9 +112,10 @@ model Resource {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chunks   ResourceChunk[]
-  sessions SessionResource[]
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks     ResourceChunk[]
+  sessions   SessionResource[]
+  embeddings Embedding[]
 
   @@index([userId])
   @@index([status])
@@ -128,7 +132,8 @@ model ResourceChunk {
   metadata       Json?
   createdAt      DateTime @default(now()) @map("created_at")
 
-  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  resource   Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  embeddings Embedding[]
 
   @@index([resourceId])
   @@index([vectorId])
@@ -152,6 +157,8 @@ model Session {
   transcriptChunks TranscriptChunk[]
   evaluations      Evaluation[]
   resources        SessionResource[]
+  embeddings       Embedding[]
+  analyticsEvents  AnalyticsEvent[]
 
   @@index([userId])
   @@index([status])
@@ -175,20 +182,63 @@ model TranscriptChunk {
 }
 
 model Evaluation {
-  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId String         @map("session_id") @db.Uuid
-  type      EvaluationType
-  content   String         @db.Text
-  provider  String?        @db.VarChar(50)
-  model     String?        @db.VarChar(100)
-  metadata  Json?
-  createdAt DateTime       @default(now()) @map("created_at")
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId       String         @map("session_id") @db.Uuid
+  type            EvaluationType
+  content         String         @db.Text
+  summary         String?        @db.Text
+  strengths       Json?
+  weaknesses      Json?
+  missedConcepts  Json?          @map("missed_concepts")
+  followUp        Json?          @map("follow_up")
+  confidenceScore Float?         @map("confidence_score")
+  topicDrift      Boolean?       @map("topic_drift")
+  provider        String?        @db.VarChar(50)
+  model           String?        @db.VarChar(100)
+  metadata        Json?
+  createdAt       DateTime       @default(now()) @map("created_at")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([type])
   @@map("evaluations")
+}
+
+model Embedding {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId       String?  @map("session_id") @db.Uuid
+  resourceId      String?  @map("resource_id") @db.Uuid
+  resourceChunkId String?  @map("resource_chunk_id") @db.Uuid
+  vector          Json
+  model           String?  @db.VarChar(100)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  session       Session?       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  resource      Resource?      @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  resourceChunk ResourceChunk? @relation(fields: [resourceChunkId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([resourceId])
+  @@index([resourceChunkId])
+  @@map("embeddings")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id") @db.Uuid
+  event     String   @db.VarChar(150)
+  payload   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([event])
+  @@map("analytics_events")
 }
 
 model SessionResource {
