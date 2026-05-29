@@ -5,6 +5,7 @@ import {
   createSession,
   endSession,
   getSessionById,
+  normalizeSessionResourceIds,
 } from '#src/services/session.service.ts';
 import { handleTextInput } from '#src/services/text-input.service.ts';
 import { transcribeAudioBuffer } from '#src/services/stt.service.ts';
@@ -56,12 +57,14 @@ export const registerRealtimeSocket = (io: Server) => {
   const emitLlmResponse = (
     sessionId: string,
     phase: 'start' | 'realtime' | 'end',
-    content: string
+    content: string,
+    context?: unknown
   ) => {
     io.to(sessionId).emit('llm:response', {
       sessionId,
       phase,
       content,
+      context,
     });
   };
 
@@ -132,21 +135,30 @@ export const registerRealtimeSocket = (io: Server) => {
           subject: payload?.subject,
           topic: payload?.topic,
           goal: payload?.goal,
+          resourceId: payload?.resourceId,
           resourceIds: payload?.resourceIds,
         });
         socket.join(session.id);
         const sessionWithResources = await getSessionById(session.id);
         const resourceIds =
           sessionWithResources?.resources.map(item => item.resourceId) ||
-          payload?.resourceIds;
+          normalizeSessionResourceIds({
+            resourceId: payload?.resourceId,
+            resourceIds: payload?.resourceIds,
+          });
         const startResponse = await generateSessionStartResponse({
           subject: session.subject || undefined,
           topic: session.topic || undefined,
           goal: session.goal || undefined,
           resourceIds,
         });
-        emitLlmResponse(session.id, 'start', startResponse.content);
-        cb?.({ ok: true, session });
+        emitLlmResponse(
+          session.id,
+          'start',
+          startResponse.content,
+          startResponse.context
+        );
+        cb?.({ ok: true, session, context: startResponse.context });
       } catch (error) {
         logger.error(`Realtime session start failed: ${String(error)}`);
         cb?.({ ok: false, error: 'Failed to start session' });

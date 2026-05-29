@@ -32,10 +32,11 @@ export const startSessionHandler = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { subject, topic, goal, resourceIds } = req.body as {
+    const { subject, topic, goal, resourceId, resourceIds } = req.body as {
       subject?: string;
       topic?: string;
       goal?: string;
+      resourceId?: string;
       resourceIds?: string[];
     };
 
@@ -44,6 +45,7 @@ export const startSessionHandler = async (req: AuthRequest, res: Response) => {
       subject,
       topic,
       goal,
+      resourceId,
       resourceIds,
     });
 
