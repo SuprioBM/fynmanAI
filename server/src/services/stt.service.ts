@@ -27,8 +27,9 @@ export const transcribeAudioBuffer = async (params: {
   const model = env.STT_MODEL || 'whisper-large-v3-turbo';
 
   const form = new FormData();
+  const audioBytes = new Uint8Array(params.buffer);
 
-  const blob = new Blob([params.buffer], {
+  const blob = new Blob([audioBytes], {
     type: params.mimeType || 'audio/webm',
   });
 

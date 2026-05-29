@@ -2,6 +2,9 @@ import { Router } from 'express';
 import {
   appendTranscriptHandler,
   endSessionHandler,
+  getSessionDetailHandler,
+  getSessionReportHandler,
+  listSessionsHandler,
   requestFinalEvaluationHandler,
   requestRealtimeFeedbackHandler,
   startSessionHandler,
@@ -19,7 +22,9 @@ import {
 const router = Router();
 router.use(authMiddleware);
 
+router.get('/', listSessionsHandler);
 router.post('/', validateRequest(StartSessionSchema), startSessionHandler);
+router.get('/:sessionId', getSessionDetailHandler);
 router.post(
   '/:sessionId/transcript',
   validateRequest(AppendTranscriptSchema),
@@ -31,6 +36,7 @@ router.post(
   validateRequest(GenerateEvaluationSchema),
   requestFinalEvaluationHandler
 );
+router.get('/:sessionId/report', getSessionReportHandler);
 router.post('/:sessionId/end', endSessionHandler);
 
 export default router;

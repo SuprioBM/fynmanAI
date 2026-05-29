@@ -10,7 +10,23 @@ const optionalNumber = z.preprocess(
   z.coerce.number().optional()
 );
 const optionalBoolean = z.preprocess(
-  emptyToUndefined,
+  value => {
+    const normalized = emptyToUndefined(value);
+    if (typeof normalized !== 'string') {
+      return normalized;
+    }
+
+    const lower = normalized.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(lower)) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'off'].includes(lower)) {
+      return false;
+    }
+
+    return normalized;
+  },
   z.coerce.boolean().optional()
 );
 
@@ -26,6 +42,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 
   ARCJET_KEY: optionalString,
+  RATE_LIMIT_WINDOW_MS: optionalNumber,
+  RATE_LIMIT_MAX_REQUESTS: optionalNumber,
+  AUTH_RATE_LIMIT_WINDOW_MS: optionalNumber,
+  AUTH_RATE_LIMIT_MAX_REQUESTS: optionalNumber,
+  UPLOAD_RATE_LIMIT_WINDOW_MS: optionalNumber,
+  UPLOAD_RATE_LIMIT_MAX_REQUESTS: optionalNumber,
 
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   JWT_EXPIRES_IN: z.string().default('5m'),
@@ -83,14 +105,33 @@ const envSchema = z.object({
   ASSEMBLYAI_API_KEY: optionalString,
 
   AUDIO_CHUNK_DURATION: optionalNumber,
+  AUDIO_CHUNKS_PER_MINUTE: optionalNumber,
+  AUDIO_MIN_CHUNK_DURATION_MS: optionalNumber,
+  AUDIO_MAX_CHUNK_DURATION_MS: optionalNumber,
+  AUDIO_MAX_CHUNK_BYTES: optionalNumber,
+  AUDIO_SILENCE_THRESHOLD: optionalNumber,
+  AUDIO_PROCESSING_ATTEMPTS: optionalNumber,
+  AUDIO_PROCESSING_BACKOFF_MS: optionalNumber,
+  AUDIO_PROCESSING_CONCURRENCY: optionalNumber,
+  AUDIO_PROCESSING_RESULT_TIMEOUT_MS: optionalNumber,
+  ENABLE_AUDIO_PROCESSING_QUEUE: optionalBoolean.default(false),
   LLM_ANALYSIS_INTERVAL: optionalNumber,
   TRANSCRIPT_WINDOW_MINUTES: optionalNumber,
 
   WS_PATH: optionalString,
   WS_HEARTBEAT_INTERVAL: optionalNumber,
+  WS_RATE_LIMIT_WINDOW_MS: optionalNumber,
+  WS_RATE_LIMIT_MAX_EVENTS: optionalNumber,
+  WS_AUDIO_RATE_LIMIT_WINDOW_MS: optionalNumber,
+  WS_AUDIO_RATE_LIMIT_MAX_CHUNKS: optionalNumber,
 
   UPLOAD_DIR: optionalString,
   MAX_FILE_SIZE_MB: optionalNumber,
+  URL_MAX_FILE_SIZE_MB: optionalNumber,
+  URL_FETCH_TIMEOUT_MS: optionalNumber,
+  RESOURCE_CHUNK_TOKENS: optionalNumber,
+  RESOURCE_CHUNK_OVERLAP: optionalNumber,
+  DOMAIN_ALLOWED_SUBJECTS: optionalString,
 
   DOC_PARSER_PYTHON_PATH: optionalString,
   DOC_PARSER_SCRIPT_PATH: optionalString,
@@ -117,6 +158,11 @@ const envSchema = z.object({
 
   SESSION_TIMEOUT_MINUTES: optionalNumber,
   MAX_TRANSCRIPT_CHUNKS: optionalNumber,
+  TRANSCRIPT_RETENTION_DAYS: optionalNumber,
+  RESOURCE_RETENTION_DAYS: optionalNumber,
+  ANALYTICS_RETENTION_DAYS: optionalNumber,
+  RETENTION_SWEEP_INTERVAL_MINUTES: optionalNumber,
+  RETENTION_SWEEP_ON_STARTUP: optionalBoolean,
 
   STORAGE_PROVIDER: optionalString,
   S3_REGION: optionalString,
@@ -150,6 +196,12 @@ export const {
   API_URL,
   DATABASE_URL,
   ARCJET_KEY,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX_REQUESTS,
+  AUTH_RATE_LIMIT_WINDOW_MS,
+  AUTH_RATE_LIMIT_MAX_REQUESTS,
+  UPLOAD_RATE_LIMIT_WINDOW_MS,
+  UPLOAD_RATE_LIMIT_MAX_REQUESTS,
   JWT_SECRET,
   JWT_EXPIRES_IN,
   REFRESH_JWT_SECRET,
@@ -199,12 +251,31 @@ export const {
   DEEPGRAM_API_KEY,
   ASSEMBLYAI_API_KEY,
   AUDIO_CHUNK_DURATION,
+  AUDIO_CHUNKS_PER_MINUTE,
+  AUDIO_MIN_CHUNK_DURATION_MS,
+  AUDIO_MAX_CHUNK_DURATION_MS,
+  AUDIO_MAX_CHUNK_BYTES,
+  AUDIO_SILENCE_THRESHOLD,
+  AUDIO_PROCESSING_ATTEMPTS,
+  AUDIO_PROCESSING_BACKOFF_MS,
+  AUDIO_PROCESSING_CONCURRENCY,
+  AUDIO_PROCESSING_RESULT_TIMEOUT_MS,
+  ENABLE_AUDIO_PROCESSING_QUEUE,
   LLM_ANALYSIS_INTERVAL,
   TRANSCRIPT_WINDOW_MINUTES,
   WS_PATH,
   WS_HEARTBEAT_INTERVAL,
+  WS_RATE_LIMIT_WINDOW_MS,
+  WS_RATE_LIMIT_MAX_EVENTS,
+  WS_AUDIO_RATE_LIMIT_WINDOW_MS,
+  WS_AUDIO_RATE_LIMIT_MAX_CHUNKS,
   UPLOAD_DIR,
   MAX_FILE_SIZE_MB,
+  URL_MAX_FILE_SIZE_MB,
+  URL_FETCH_TIMEOUT_MS,
+  RESOURCE_CHUNK_TOKENS,
+  RESOURCE_CHUNK_OVERLAP,
+  DOMAIN_ALLOWED_SUBJECTS,
   DOC_PARSER_PYTHON_PATH,
   DOC_PARSER_SCRIPT_PATH,
   DOC_PARSER_TIMEOUT_MS,
@@ -226,6 +297,11 @@ export const {
   ENABLE_TOPIC_DRIFT_DETECTION,
   SESSION_TIMEOUT_MINUTES,
   MAX_TRANSCRIPT_CHUNKS,
+  TRANSCRIPT_RETENTION_DAYS,
+  RESOURCE_RETENTION_DAYS,
+  ANALYTICS_RETENTION_DAYS,
+  RETENTION_SWEEP_INTERVAL_MINUTES,
+  RETENTION_SWEEP_ON_STARTUP,
   STORAGE_PROVIDER,
   S3_REGION,
   S3_BUCKET,

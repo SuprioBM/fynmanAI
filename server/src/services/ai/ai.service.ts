@@ -67,7 +67,7 @@ const normalizeProvider = (
 const getProviderApiKey = (provider: ProviderId): string => {
   const apiKey =
     provider === 'openrouter'
-      ? env.OPENROUTER_API_KEY || env.OPEN_ROUTER_APIKEY || env.OPENAI_API_KEY
+      ? env.OPENROUTER_API_KEY || env.OPEN_ROUTER_APIKEY
       : provider === 'groq'
         ? env.GROQ_API_KEY
         : env.OPENAI_API_KEY;
@@ -77,6 +77,22 @@ const getProviderApiKey = (provider: ProviderId): string => {
   }
 
   return apiKey;
+};
+
+const resolveEmbeddingProvider = (): ProviderId | undefined => {
+  if (env.EMBEDDING_PROVIDER) {
+    return normalizeProvider(env.EMBEDDING_PROVIDER);
+  }
+
+  if (env.OPENROUTER_API_KEY || env.OPEN_ROUTER_APIKEY) {
+    return 'openrouter';
+  }
+
+  if (env.OPENAI_API_KEY) {
+    return 'openai';
+  }
+
+  return undefined;
 };
 
 const getProviderBaseUrl = (provider: ProviderId): string => {
@@ -289,14 +305,13 @@ export const generateEmbedding = async (
   model: string;
   raw: unknown;
 }> => {
-  const primaryProvider = normalizeProvider(
-    env.EMBEDDING_PROVIDER,
-    'openrouter'
-  );
+  const primaryProvider = resolveEmbeddingProvider();
   const fallbackProvider = normalizeProvider(env.EMBEDDING_FALLBACK_PROVIDER);
 
   if (!primaryProvider) {
-    throw new Error('EMBEDDING_PROVIDER is required.');
+    throw new Error(
+      'Embedding provider is not configured. Set EMBEDDING_PROVIDER or configure an API key.'
+    );
   }
 
   if (!PROVIDER_CAPABILITIES[primaryProvider].embeddings) {

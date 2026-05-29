@@ -1,7 +1,14 @@
 import 'dotenv/config';
 import logger from '#src/config/logger.ts';
+import { startAudioProcessingWorker } from '#src/workers/audio-processing.worker.ts';
+import { startUrlIngestWorker } from '#src/workers/url-ingest.worker.ts';
+import {
+  startRetentionScheduler,
+  stopRetentionScheduler,
+} from '#src/services/retention.service.ts';
 
 let isShuttingDown = false;
+const workers: Array<{ close: () => Promise<unknown> }> = [];
 
 const shutdown = async (signal: string) => {
   if (isShuttingDown) {
@@ -12,9 +19,8 @@ const shutdown = async (signal: string) => {
   logger.info(`[BullMQ] Worker shutdown signal received: ${signal}`);
 
   try {
-    await Promise.all([
-      // TODO: place the actual worker
-    ]);
+    stopRetentionScheduler();
+    await Promise.all(workers.map(worker => worker.close()));
     logger.info('[BullMQ] Worker closed cleanly');
     process.exit(0);
   } catch (error) {
@@ -33,11 +39,11 @@ process.on('SIGTERM', () => {
 
 const startWorkers = async () => {
   try {
-    await Promise.all([
-      // TODO: add the actual methods
-    ]);
-    logger.info('[BullMQ] Product image edit worker is running');
-    logger.info('[BullMQ] 3D model generation worker is running');
+    workers.push(startUrlIngestWorker());
+    workers.push(startAudioProcessingWorker());
+    startRetentionScheduler();
+    logger.info('[BullMQ] URL ingest worker is running');
+    logger.info('[BullMQ] Audio processing worker is running');
   } catch (error: unknown) {
     logger.error(`[BullMQ] Worker failed to start: ${String(error)}`);
     process.exit(1);

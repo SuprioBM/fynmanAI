@@ -93,6 +93,19 @@ export const ensureCollection = async (
   await ensurePayloadIndexes(collectionName);
 };
 
+export const checkQdrantHealth = async (): Promise<{
+  collectionName: string;
+  available: boolean;
+}> => {
+  const collectionName = getQdrantCollection();
+  await requestQdrant(`/collections/${collectionName}`);
+
+  return {
+    collectionName,
+    available: true,
+  };
+};
+
 export const upsertPoints = async (
   collectionName: string,
   points: QdrantPoint[]
@@ -101,6 +114,25 @@ export const upsertPoints = async (
     method: 'PUT',
     body: { points },
   });
+};
+
+export const deletePoints = async (
+  collectionName: string,
+  pointIds: Array<string | number>
+): Promise<void> => {
+  if (!pointIds.length) {
+    return;
+  }
+
+  await requestQdrant(
+    `/collections/${collectionName}/points/delete?wait=true`,
+    {
+      method: 'POST',
+      body: {
+        points: pointIds,
+      },
+    }
+  );
 };
 
 export const searchPoints = async (params: {

@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "smoke:mvp": "node scripts/mvp-smoke.mjs",
     "db:gen": "prisma generate",
     "db:migrate": "prisma migrate",
     "db:studio": "prisma studio",
