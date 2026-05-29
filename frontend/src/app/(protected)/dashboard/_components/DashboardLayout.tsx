@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import DashboardNav from "./DashboardNav";
 import DashboardShellClient from "./DashboardShellClient";
-import DashboardMobileNav from "../../../../components/ui/MobileNav";
 import MobileNav from "../../../../components/ui/MobileNav";
 
 const topLogoUrl =
