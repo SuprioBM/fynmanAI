@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { Socket } from "socket.io-client";
+// import type { Socket } from "socket.io-client";
 import { createSocket } from "@/lib/socket/socket";
 import { startSession } from "@/services/voice.service";
 import { useVoiceStore } from "@/store/useVoiceStore";
@@ -33,12 +33,11 @@ export const useVoiceSocket = (token: string) => {
     setConnected,
     setSessionReady,
     setAiFeedback,
-    resourceIds,
-    subject,
-    topic,
+    socket: existingSocket,
   } = useVoiceStore();
 
-  const startSessionFlow = useCallback(async (socket: Socket) => {
+  const startSessionFlow = useCallback(async (socket: any) => {
+    const { resourceIds, subject, topic } = useVoiceStore.getState();
     setSessionReady(false);
 
     try {
@@ -62,7 +61,8 @@ export const useVoiceSocket = (token: string) => {
     topic,
   ]);
 
-  const wireSocket = useCallback((socket: Socket) => {
+
+  const wireSocket = useCallback((socket: any) => {
     socket.off("connect");
     socket.off("disconnect");
     socket.off("transcript:chunk");
@@ -110,8 +110,8 @@ export const useVoiceSocket = (token: string) => {
     startSessionFlow,
   ]);
 
+
   const connect = useCallback(() => {
-    const existingSocket = useVoiceStore.getState().socket;
     const socket = existingSocket ?? createSocket(token);
     setSocket(socket);
     wireSocket(socket);
@@ -121,7 +121,7 @@ export const useVoiceSocket = (token: string) => {
     }
 
     return socket;
-  }, [setSocket, token, wireSocket]);
+  }, [existingSocket, setSocket, token, wireSocket]);
 
   return { connect };
 };
