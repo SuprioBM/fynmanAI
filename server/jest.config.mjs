@@ -32,7 +32,6 @@ const config = {
     '^#validations/(.*)$': '<rootDir>/src/validations/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-
 };
 
 export default config;

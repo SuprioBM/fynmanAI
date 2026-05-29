@@ -92,6 +92,7 @@ const envSchema = z.object({
 
   UPLOAD_DIR: optionalString,
   MAX_FILE_SIZE_MB: optionalNumber,
+  MAX_AUDIO_CHUNK_MB: optionalNumber,
   URL_MAX_FILE_SIZE_MB: optionalNumber,
   URL_FETCH_TIMEOUT_MS: optionalNumber,
   RESOURCE_CHUNK_TOKENS: optionalNumber,
@@ -212,6 +213,7 @@ export const {
   WS_HEARTBEAT_INTERVAL,
   UPLOAD_DIR,
   MAX_FILE_SIZE_MB,
+  MAX_AUDIO_CHUNK_MB,
   URL_MAX_FILE_SIZE_MB,
   URL_FETCH_TIMEOUT_MS,
   RESOURCE_CHUNK_TOKENS,

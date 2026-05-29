@@ -2,5 +2,7 @@ node_modules/
 coverage/
 logs/
 drizzle/
+dist/
+src/generated/
 *.log
 package-lock.json
