@@ -33,6 +33,17 @@ export const createSession = async (params: {
   });
 
   if (params.resourceIds?.length) {
+    const owned = await prisma.resource.findMany({
+      where: { id: { in: params.resourceIds }, userId: params.userId },
+      select: { id: true },
+    });
+    const ownedSet = new Set(owned.map(r => r.id));
+    const unauthorized = params.resourceIds.filter(id => !ownedSet.has(id));
+    if (unauthorized.length) {
+      throw new Error(
+        `Resources not found or not accessible: ${unauthorized.join(', ')}`
+      );
+    }
     await attachResourceToSession(session.id, params.resourceIds);
   }
 
@@ -70,14 +81,24 @@ export const createSession = async (params: {
   return session;
 };
 
-export const endSession = async (sessionId: string) =>
-  prisma.session.update({
+export const endSession = async (sessionId: string) => {
+  const session = await prisma.session.update({
     where: { id: sessionId },
     data: {
       status: 'ENDED' as SessionStatus,
       endedAt: new Date(),
     },
   });
+
+  await trackAnalyticsEvent({
+    event: 'session.ended',
+    userId: session.userId,
+    sessionId,
+    payload: { endedAt: session.endedAt?.toISOString() },
+  });
+
+  return session;
+};
 
 export const getSessionById = async (sessionId: string) =>
   prisma.session.findUnique({

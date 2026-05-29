@@ -6,6 +6,8 @@ import {
   getResourceById,
 } from '#src/services/resource.service.ts';
 import { ingestResourceText } from '#src/services/resource-ingest.service.ts';
+import { urlIngestQueue } from '#src/queues/url-ingest.queue.ts';
+import { trackAnalyticsEvent } from '#src/services/analytics.service.ts';
 
 export const createResourceHandler = async (
   req: AuthRequest,
@@ -65,6 +67,25 @@ export const createResourceHandler = async (
         status: 201,
         message: 'Resource ingested',
         data: { resource, ingest },
+      });
+    }
+
+    if (sourceType === 'URL') {
+      await urlIngestQueue.add({
+        resourceId: resource.id,
+        sourceUrl: sourceUrl!,
+      });
+
+      await trackAnalyticsEvent({
+        event: 'resource.ingestion.queued',
+        userId: req.userId,
+        payload: { resourceId: resource.id },
+      });
+
+      return sendApiSuccess(res, {
+        status: 202,
+        message: 'Resource created. URL ingestion queued.',
+        data: { resource },
       });
     }
 

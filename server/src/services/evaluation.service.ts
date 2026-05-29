@@ -66,6 +66,9 @@ const coerceNumber = (value: unknown): number | null => {
   return null;
 };
 
+const clampConfidenceScore = (score: number): number =>
+  Math.min(100, Math.max(0, score));
+
 const parseFinalEvaluation = (raw: string): FinalEvaluationPayload | null => {
   const parsed = extractJson(raw);
   if (!parsed) {
@@ -73,7 +76,7 @@ const parseFinalEvaluation = (raw: string): FinalEvaluationPayload | null => {
   }
 
   const summary = typeof parsed.summary === 'string' ? parsed.summary : '';
-  const confidenceScore = coerceNumber(parsed.confidence_score);
+  const rawScore = coerceNumber(parsed.confidence_score);
   const topicDrift =
     typeof parsed.topic_drift === 'boolean' ? parsed.topic_drift : false;
 
@@ -83,7 +86,7 @@ const parseFinalEvaluation = (raw: string): FinalEvaluationPayload | null => {
     weaknesses: coerceStringArray(parsed.weaknesses),
     missed_concepts: coerceStringArray(parsed.missed_concepts),
     follow_up: coerceStringArray(parsed.follow_up),
-    confidence_score: confidenceScore ?? 0,
+    confidence_score: rawScore !== null ? clampConfidenceScore(rawScore) : 0,
     topic_drift: topicDrift,
   };
 };

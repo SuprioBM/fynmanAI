@@ -7,6 +7,7 @@ import {
   updateResourceStatus,
   updateResourceFields,
 } from '#src/services/resource.service.ts';
+import { trackAnalyticsEvent } from '#src/services/analytics.service.ts';
 import {
   ensureCollection,
   getQdrantCollection,
@@ -71,8 +72,17 @@ export const ingestResourceText = async (params: {
 }): Promise<{ chunkCount: number }> => {
   await updateResourceStatus(params.resourceId, 'PROCESSING');
 
+  let resource: Awaited<ReturnType<typeof getResourceById>> | undefined;
+
   try {
-    const resource = await getResourceById(params.resourceId);
+    resource = await getResourceById(params.resourceId);
+
+    await trackAnalyticsEvent({
+      event: 'resource.ingestion.started',
+      userId: resource?.userId,
+      payload: { resourceId: params.resourceId },
+    });
+
     const cleanedText = cleanResourceText(params.text);
     const subject = params.subject || resource?.subject || undefined;
     const topic = params.topic || resource?.topic || undefined;
@@ -179,9 +189,25 @@ export const ingestResourceText = async (params: {
 
     await updateResourceStatus(params.resourceId, 'READY');
 
+    await trackAnalyticsEvent({
+      event: 'resource.ingestion.completed',
+      userId: resource?.userId,
+      payload: { resourceId: params.resourceId, chunkCount: chunks.length },
+    });
+
     return { chunkCount: chunks.length };
   } catch (error) {
     await updateResourceStatus(params.resourceId, 'FAILED');
+
+    await trackAnalyticsEvent({
+      event: 'resource.ingestion.failed',
+      userId: resource?.userId,
+      payload: {
+        resourceId: params.resourceId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+
     throw error;
   }
 };
