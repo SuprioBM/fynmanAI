@@ -50,6 +50,8 @@ export const registerRealtimeSocket = (io: Server) => {
       return next(new Error('Unauthorized'));
     }
   });
+   
+  
 
   const emitLlmResponse = (
     sessionId: string,
@@ -132,7 +134,6 @@ export const registerRealtimeSocket = (io: Server) => {
           goal: payload?.goal,
           resourceIds: payload?.resourceIds,
         });
-
         socket.join(session.id);
         const sessionWithResources = await getSessionById(session.id);
         const resourceIds =
@@ -164,6 +165,8 @@ export const registerRealtimeSocket = (io: Server) => {
       try {
         const sessionId = payload?.sessionId;
         const audioBase64 = payload?.audioBase64;
+        const endMes = payload?.endMessage;
+        console.log("Received audio chunk for session", sessionId, "with endMessage:", endMes);
         if (!sessionId || !audioBase64) {
           cb?.({ ok: false, error: 'sessionId and audioBase64 are required' });
           return;
