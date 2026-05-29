@@ -21,6 +21,10 @@ second-ai-server
 
 # Testing
 coverage
+ 
+
+/.markitdown-src
+
 
 # Turbo
 .turbo

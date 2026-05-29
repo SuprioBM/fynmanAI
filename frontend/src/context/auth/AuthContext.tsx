@@ -9,6 +9,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { usePathname } from "next/navigation";
 
 import { Session } from "@/types/auth";
 import { deleteSession } from "@/lib/auth/session";
@@ -90,6 +91,7 @@ export function AuthProvider({
 	const [accessToken, setAccessToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | undefined>();
+	const pathname = usePathname();
 
 	const refreshSession = useCallback(async () => {
 		setIsLoading(true);
@@ -119,7 +121,7 @@ export function AuthProvider({
 
 	useEffect(() => {
 		void refreshSession();
-	}, [refreshSession]);
+	}, [refreshSession, pathname]);
 
 	const value = useMemo<AuthContextValue>(
 		() => ({

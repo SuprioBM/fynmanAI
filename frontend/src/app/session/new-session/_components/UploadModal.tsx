@@ -7,12 +7,22 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => void;
+  uploadLoading?: boolean;
+  uploadError?: string | null;
+  uploadSuccess?: boolean;
 };
 
-export default function UploadModal({ open, onClose, onUpload }: Props) {
+export default function UploadModal({
+  open,
+  onClose,
+  onUpload,
+  uploadLoading = false,
+  uploadError,
+  uploadSuccess,
+}: Props) {
   const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -39,6 +49,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setIsDragging(false);
     const dropped = Array.from(e.dataTransfer.files);
     setUploadError(null);
     setFiles((prev) => {
@@ -52,52 +63,8 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
     setFiles((prev) => prev.filter((f) => f.name !== name));
   };
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file, file.name);
-
-    const response = await fetch("/api/parser/parse", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type") ?? "";
-      const details = contentType.includes("application/json")
-        ? await response.json().catch(() => null)
-        : await response.text().catch(() => null);
-      const message =
-        typeof details === "object" && details && "message" in details
-          ? String((details as { message?: string }).message)
-          : typeof details === "string" && details.trim()
-            ? details
-            : `Failed to upload ${file.name}`;
-
-      throw new Error(message);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (files.length === 0 || uploading) return;
-
-    setUploading(true);
-    setUploadError(null);
-
-    try {
-      for (const file of files) {
-        await uploadFile(file);
-      }
-
-      onUpload(files);
-      resetModal();
-      onClose();
-    } catch (error) {
-      setUploadError(
-        error instanceof Error ? error.message : "Failed to upload documents"
-      );
-    } finally {
-      setUploading(false);
-    }
+  const handleUpload = () => {
+    onUpload(files);
   };
 
   const getIcon = (name: string) => {
@@ -110,7 +77,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
   const modal = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-9999 flex items-center justify-center"
       style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
       onClick={(e) => {
         // Close on backdrop click
@@ -140,10 +107,18 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
         {/* Drop zone */}
         <div
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           className="rounded-lg p-8 text-center flex flex-col items-center gap-3 transition-colors"
-          style={{ border: "2px dashed rgba(70,69,84,0.6)" }}
+          style={{
+            border: isDragging
+              ? "2px dashed rgba(128,131,255,0.8)"
+              : "2px dashed rgba(70,69,84,0.6)",
+          }}
         >
           <span className="material-symbols-outlined text-[#8083ff] text-4xl">
             upload_file
@@ -180,7 +155,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
                   <span className="material-symbols-outlined text-[#8083ff] text-[18px]">
                     {getIcon(f.name)}
                   </span>
-                  <span className="text-sm text-[#c0c1ff] truncate max-w-[300px]">
+                  <span className="text-sm text-[#c0c1ff] truncate max-w-75">
                     {f.name}
                   </span>
                   <span className="text-xs text-[#c7c4d7] opacity-40">
@@ -218,25 +193,33 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
           </button>
           <button
             onClick={handleUpload}
-            disabled={files.length === 0 || uploading}
+            disabled={files.length === 0 || uploadLoading}
             className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
             style={{
               background:
-                files.length === 0 || uploading
+                files.length === 0 || uploadLoading
                   ? "rgba(128,131,255,0.3)"
                   : "#8083ff",
               color:
-                files.length === 0 || uploading
+                files.length === 0 || uploadLoading
                   ? "rgba(255,255,255,0.4)"
                   : "#000",
-              cursor: files.length === 0 || uploading ? "not-allowed" : "pointer",
+              cursor:
+                files.length === 0 || uploadLoading ? "not-allowed" : "pointer",
             }}
           >
-            {uploading
-              ? "Uploading..."
-              : `Upload ${files.length > 0 ? `(${files.length})` : ""}`}
+            {uploadLoading ? "Uploading..." : `Upload${files.length > 0 ? ` (${files.length})` : ""}`}
           </button>
         </div>
+
+        {uploadError && (
+          <p className="text-sm text-error text-right">{uploadError}</p>
+        )}
+        {uploadSuccess && !uploadLoading && (
+          <p className="text-sm text-[#c7c4d7] text-right">
+            Upload complete.
+          </p>
+        )}
       </div>
     </div>
   );
