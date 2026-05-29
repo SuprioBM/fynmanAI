@@ -1,159 +1,344 @@
-# Hackathon MVP Server Tasks
+# Feynman AI Server MVP Task Plan
 
-This project is an MVP for a hackathon. Do not try to complete every unfinished server feature before the demo. The goal is one polished path:
+This plan is based on `server/CONTEXT.MD`. The MVP server should prove the core product loop:
 
-User uploads or creates a learning resource -> starts a session -> explains a topic -> receives probing questions -> ends the session -> receives a final evaluation.
+```text
+upload learning resource
+-> parse/chunk/embed content
+-> start speaking session
+-> transcribe user explanation
+-> retrieve relevant resource context
+-> ask probing questions
+-> generate final understanding report
+```
 
-## MVP Must Complete
+The server must stay focused on understanding evaluation, not generic tutoring or open-ended chat.
 
-These are the only server items that can block a successful demo.
+## MVP Must-Have Features
 
-### P0 - Make Audio Results Reliably Reach The Client
+### 1. Session Management
 
-**Feature:** Real-time audio transcription and probing-question delivery.
+**Goal:** Track one constrained learning/evaluation session from resource upload to final report.
 
-**What is unfinished or buggy:**
-- When audio processing uses the BullMQ queue, the socket waits only for a limited timeout.
-- If the worker finishes later, the worker logs completion but the client may not receive `transcript_update` or `probing_question`.
-- This can make the live demo look broken even if transcription succeeded.
+**Required endpoints:**
 
-**MVP completion approach:**
-- For the hackathon demo, prefer the simplest stable path: set `ENABLE_AUDIO_PROCESSING_QUEUE=false` and process audio inline.
-- Keep the queue path as post-MVP unless inline processing is too slow.
-- Verify that one audio chunk produces a transcript update and, after the configured interval, a probing question.
+- `POST /sessions/create`
+- `POST /sessions/:id/end`
+- `GET /sessions/:id/report`
 
-**Done when:**
-- The demo flow consistently shows transcript updates in the frontend.
-- The frontend receives probing questions during a session.
-- No transcript result disappears silently.
+**Required data:**
 
-### P0 - Prevent Bad LLM Output From Breaking The Frontend
+- session id
+- user id, or temporary anonymous owner id for MVP
+- subject
+- topic
+- learning goal
+- started timestamp
+- ended timestamp
+- session status
 
-**Feature:** Rolling feedback and final mastery evaluation.
+**How to solve:**
 
-**What is unfinished or buggy:**
-- The server asks the LLM for JSON but only extracts a JSON-looking block from plain text.
-- If the LLM returns malformed or incomplete JSON, the frontend can receive inconsistent evaluation data.
+- Create a `sessions` table/model.
+- Restrict MVP subjects to one domain, preferably `physics` or `mathematics`.
+- Validate that every upload, transcript, embedding, and evaluation belongs to a session.
+- Keep the first implementation simple: one active speaking session per session id.
 
-**MVP completion approach:**
-- Add a lightweight fallback, not a full structured-output system.
-- If rolling feedback JSON parsing fails, return:
-  - `questions: [raw response or generic probing question]`
-  - empty `clarifications`
-  - empty `detected_gaps`
-  - `topic_drift: false`
-- If final evaluation JSON parsing fails, return:
-  - a short summary from the raw response
-  - empty arrays for list fields
-  - a safe confidence score
-- Keep full Zod validation and retry/repair for post-MVP.
+### 2. Resource Upload and Processing
 
-**Done when:**
-- Rolling feedback always returns a frontend-safe shape.
-- Final evaluation always returns a frontend-safe shape.
-- A malformed LLM response does not crash or block the demo.
+**Goal:** Let users upload learning materials and turn them into searchable knowledge chunks.
 
-### P0 - Make One Resource Ingestion Path Work End-To-End
+**Required endpoint:**
 
-**Feature:** Learning resource ingestion, chunking, embedding, and retrieval.
+- `POST /upload`
 
-**What is unfinished or buggy:**
-- Text resources and file uploads use different flows.
-- `POST /resources` works cleanly for `TEXT`.
-- File parsing exists through `POST /document-parser/parse`, but the flow is less obvious.
-- A hackathon MVP does not need every upload path; it needs one reliable path.
+**Required behavior:**
 
-**MVP completion approach:**
-- Pick one canonical demo path:
-  - Preferred fastest path: use `TEXT` resources through `POST /resources`.
-  - If file upload is required for the demo: use `POST /document-parser/parse` as the canonical file path.
-- Document the chosen path for the frontend team.
-- Ensure the resource reaches `READY`, has chunks, embeddings, and can be retrieved during evaluation.
+- Accept PDF, text, notes, and optionally images.
+- Validate file type and file size.
+- Extract text from uploaded files.
+- Clean extracted text.
+- Chunk text into roughly `300-800` tokens.
+- Use `10-20%` overlap between chunks.
+- Store raw extracted text.
+- Generate embeddings for each chunk.
+- Store chunks and embeddings by session id.
 
-**Done when:**
-- A demo resource can be created from the frontend.
-- The resource becomes `READY`.
-- Starting a session with that resource succeeds.
-- Feedback/final evaluation can retrieve context from that resource.
+**How to solve:**
 
-### P1 - Add A Minimal Demo Flow Test Or Manual Script
+- Use `multer` or an equivalent upload middleware.
+- Start with text and PDF support first.
+- Add OCR only if image uploads are required for the hackathon demo.
+- For PDF parsing, use a reliable parser or the recommended tools from context if already available.
+- Use OpenAI `text-embedding-3-small` or a local sentence-transformer.
+- Store vector records with metadata:
+  - `sessionId`
+  - `resourceId`
+  - `chunkIndex`
+  - `text`
+  - `topic`
 
-**Feature:** Confidence that the core story works before presenting.
+### 3. Vector Retrieval
 
-**What is unfinished or buggy:**
-- Existing tests do not cover the full product path.
-- Without a simple test or script, regressions may show up during the demo.
+**Goal:** Ground all probing and evaluation in the uploaded resources.
 
-**MVP completion approach:**
-- Add either one automated integration test or one documented manual smoke script.
-- Cover the happy path only:
-  - create/login user if needed
-  - create text resource
-  - start session
-  - append transcript or send one audio chunk
-  - request feedback
-  - end session
-  - fetch report
-- Mock external providers if writing an automated test is faster than calling real APIs.
+**Required behavior:**
 
-**Done when:**
-- The team can run one repeatable check before the demo.
-- The check proves the core MVP path works.
+- Embed the recent transcript or topic query.
+- Search only chunks belonging to the current session.
+- Return top relevant text chunks.
+- Pass actual text chunks to the LLM, never raw embeddings.
 
-**Implemented:**
-- `server/scripts/mvp-smoke.mjs` exercises the demo happy path against a running server.
-- Run it with `npm run smoke:mvp` from `server/`.
+**How to solve:**
 
-### P1 - Document The Demo API Contract
+- Use Qdrant or Chroma for MVP.
+- Create a retrieval service with one method like:
 
-**Feature:** Frontend/server integration.
+```ts
+retrieveRelevantChunks(sessionId, queryText, limit)
+```
 
-**What is unfinished or buggy:**
-- The README is short.
-- `server/todo.md` says many things are implemented, but that is too broad for MVP planning.
-- The frontend team needs to know exactly which endpoints and socket events to use.
+- Default `limit` can be `4-8` chunks.
+- Add a score threshold later if irrelevant chunks become noisy.
 
-**MVP completion approach:**
-- Add a small MVP section to `server/README.MD` or keep this in a shared team note.
-- Document:
-  - chosen resource creation path
-  - session start payload
-  - transcript/audio event payload
-  - feedback response shape
-  - final report response shape
-  - required env vars for demo
+### 4. WebSocket Server
 
-**Done when:**
-- A teammate can run the MVP flow without reading server internals.
+**Goal:** Support real-time audio streaming, transcript updates, probing questions, and session summaries.
 
-**Implemented:**
-- `server/README.MD` documents the MVP smoke check, canonical `TEXT` resource path, session payloads, transcript/audio payloads, feedback/report shapes, and demo env vars.
+**Required client -> server events:**
 
-## MVP Nice To Have
+- `session_start`
+- `audio_chunk`
+- `session_end`
 
-Only do these if the must-complete items are stable.
+**Required server -> client events:**
 
-### P2 - Basic Session Guardrails
+- `transcript_update`
+- `probing_question`
+- `session_summary`
+- `error`
 
-**Feature:** Session lifecycle safety.
+**How to solve:**
 
-**What is unfinished or buggy:**
-- The socket flow should not accept audio for ended sessions.
-- Inactive session timeout behavior is not important for the demo, but ended-session behavior is visible.
+- Use the `ws` library with Express.
+- Validate the session id when a socket connects or when `session_start` is received.
+- Keep per-session state:
+  - current transcript buffer
+  - last LLM analysis time
+  - audio chunk count
+  - connection status
+- Do not call the LLM for every audio chunk.
 
-**MVP completion approach:**
-- Reject audio chunks when the session status is `ENDED`.
-- Return a clear client error.
+### 5. Speech-to-Text Pipeline
 
-### P2 - Simple File Upload Polish
+**Goal:** Convert streamed speech into rolling transcript text.
 
-**Feature:** Uploaded document resources.
+**Required behavior:**
 
-**What is unfinished or buggy:**
-- Direct upload storage is not fully wired to object storage.
-- For a demo, durable S3 storage is not required if local/temp parsing works.
+- Receive audio chunks every `2-5` seconds.
+- Send each chunk, or buffered chunks, to STT.
+- Append transcript to session memory.
+- Emit `transcript_update` to the frontend.
 
-**MVP completion approach:**
-- Use local parsing for demo.
-- Show upload status clearly.
-- Skip S3 unless the deployment environment needs it.
+**How to solve:**
+
+- For fastest MVP, use Whisper API or another hosted STT provider.
+- If local performance is available, use Faster-Whisper.
+- Normalize transcript before storage:
+  - trim whitespace
+  - remove empty segments
+  - store timestamp
+  - associate with session id
+
+### 6. Rolling Analysis and Probing Questions
+
+**Goal:** Periodically evaluate the user's explanation and ask targeted follow-up questions.
+
+**Required behavior:**
+
+- Every `20-30` seconds:
+  - collect recent transcript
+  - retrieve relevant resource chunks
+  - call the LLM with strict probing instructions
+  - emit one short probing question
+
+**LLM must do:**
+
+- ask probing questions
+- request clarification
+- identify missing concepts
+- stay inside the selected topic and uploaded materials
+
+**LLM must not do:**
+
+- give full explanations
+- become a generic chatbot
+- change topics
+- answer as a normal tutor
+
+**How to solve:**
+
+- Build a dedicated `generateProbingQuestion` service.
+- Use a strict system prompt that says the assistant is an examiner, not a tutor.
+- Keep output short.
+- Use structured output if possible:
+
+```json
+{
+  "type": "probing_question",
+  "question": "..."
+}
+```
+
+### 7. Final Evaluation Report
+
+**Goal:** Produce the final mastery evaluation when the session ends.
+
+**Required behavior:**
+
+- Assemble the full transcript.
+- Retrieve the most relevant resource chunks.
+- Generate:
+  - understanding summary
+  - weak areas
+  - missed concepts
+  - follow-up recommendations
+  - conceptual confidence score
+
+**How to solve:**
+
+- Build a dedicated `generateFinalEvaluation` service.
+- Store the result in an `evaluations` table/model.
+- Return the same report from:
+  - `session_summary` WebSocket event
+  - `GET /sessions/:id/report`
+
+### 8. Minimal Persistence
+
+**Goal:** Store enough data to recover reports and keep session state isolated.
+
+**Required models/tables:**
+
+- `users`, optional for MVP if anonymous sessions are allowed
+- `sessions`
+- `resources`
+- `transcript_chunks`
+- `evaluations`
+
+**Vector storage should contain:**
+
+- chunk id
+- session id
+- resource id
+- embedding
+- chunk text
+- metadata
+
+**How to solve:**
+
+- Use the existing server database setup if one already exists.
+- If no database exists yet, pick one simple path:
+  - PostgreSQL for durable MVP
+  - SQLite for very fast local hackathon MVP
+- Use Redis only if real-time session memory needs to survive process restarts or scale beyond one server.
+
+### 9. Basic Security and Reliability
+
+**Goal:** Avoid obvious abuse and data leaks.
+
+**Required behavior:**
+
+- Validate upload type and size.
+- Sanitize extracted text before storage/use.
+- Isolate resources and transcripts by session/user.
+- Keep API keys server-side only.
+- Rate-limit REST endpoints.
+- Rate-limit or cap WebSocket sessions.
+- Return clear server errors through the `error` WebSocket event.
+
+**How to solve:**
+
+- Add upload size limits.
+- Add session ownership checks.
+- Add defensive try/catch around STT, embedding, vector DB, and LLM calls.
+- Log enough to debug session failures without logging secrets.
+
+## Recommended Build Order
+
+### Phase 1: Foundation
+
+- [ ] Create session model and REST endpoints.
+- [ ] Add upload endpoint.
+- [ ] Parse text/PDF uploads.
+- [ ] Chunk uploaded text.
+- [ ] Store resources and chunks.
+
+### Phase 2: Embeddings and Retrieval
+
+- [ ] Generate embeddings for chunks.
+- [ ] Store embeddings in vector DB.
+- [ ] Implement session-scoped retrieval.
+- [ ] Test retrieval with a sample topic query.
+
+### Phase 3: Real-Time Session
+
+- [ ] Add WebSocket server.
+- [ ] Implement `session_start`.
+- [ ] Implement `audio_chunk`.
+- [ ] Connect audio chunks to STT.
+- [ ] Emit `transcript_update`.
+
+### Phase 4: Probing Questions
+
+- [ ] Track rolling transcript memory.
+- [ ] Trigger analysis every `20-30` seconds.
+- [ ] Retrieve relevant resource chunks.
+- [ ] Generate constrained LLM probing question.
+- [ ] Emit `probing_question`.
+
+### Phase 5: Final Report
+
+- [ ] Implement `session_end`.
+- [ ] Assemble full transcript.
+- [ ] Generate final evaluation.
+- [ ] Store evaluation.
+- [ ] Emit `session_summary`.
+- [ ] Serve report through `GET /sessions/:id/report`.
+
+## MVP Acceptance Criteria
+
+The server MVP is complete when:
+
+- A user can create a session.
+- A user can upload at least one learning resource.
+- The server extracts, chunks, embeds, and stores the resource.
+- The frontend can stream audio over WebSocket.
+- The server transcribes audio and returns transcript updates.
+- The server asks periodic probing questions grounded in uploaded material.
+- The server does not answer like a generic chatbot.
+- Ending the session creates a final evaluation report.
+- The report includes weak areas, missed concepts, recommendations, and a confidence score.
+
+## Explicit Non-Goals for MVP
+
+- No general-purpose AI assistant.
+- No support for every academic subject.
+- No avatars.
+- No social features.
+- No complex analytics dashboard.
+- No multi-agent architecture.
+- No microservice split unless the single server becomes impossible to manage.
+
+## Practical MVP Shortcut
+
+For a hackathon version, prefer this simplified stack:
+
+- Express REST API
+- `ws` WebSocket server
+- Hosted Whisper/STT API
+- OpenAI embeddings
+- Qdrant or Chroma vector DB
+- PostgreSQL or SQLite for app data
+- Strict LLM prompts with retrieval-grounded context
+
+This keeps the project focused on the actual differentiator: evaluating understanding through constrained, resource-grounded probing.
