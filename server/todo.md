@@ -187,11 +187,6 @@
 - [ ] Missing — Deepgram
 - [ ] Missing — AssemblyAI
 
-**PDF / OCR Tools**
-- [ ] Missing — Docling
-- [ ] Missing — OpenDataLoader
-- [ ] Missing — Tesseract
-- [ ] Missing — OCR.space
 
 **Chunking Strategy**
 - [ ] Partial — 300–800 tokens
