@@ -1,4 +1,4 @@
-import { redisClient } from '#src/app.ts';
+import { redisClient } from '#src/config/redis-client.ts';
 
 let DEFAULT_EXPIRATION =
   Number(process.env.REDIS_DEFAULT_EXPIRATION) || 15 * 60 * 60 * 24;

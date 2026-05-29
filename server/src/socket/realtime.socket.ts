@@ -13,6 +13,10 @@ import {
   processAudioChunk,
   type AudioChunkProcessResult,
 } from '#src/services/audio-processing.service.ts';
+import {
+  applyRateLimit,
+  rateLimitPresets,
+} from '#src/middlewares/rate-limit.middleware.ts';
 
 type AudioPayloadValidation =
   | { ok: true; sequence?: number; startTimeMs?: number; endTimeMs?: number }
@@ -134,6 +138,35 @@ const validateAudioPayload = (
   return { ok: true, sequence, startTimeMs, endTimeMs };
 };
 
+const enforceSocketRateLimit = async (params: {
+  socket: Socket;
+  sessionId?: string;
+  eventName: string;
+  audio?: boolean;
+}): Promise<{ ok: true } | { ok: false; error: string }> => {
+  const identity = [
+    params.socket.data.userId || 'anonymous',
+    params.sessionId || params.socket.id,
+    params.eventName,
+  ].join(':');
+  const result = await applyRateLimit(
+    identity,
+    params.audio ? rateLimitPresets.audio : rateLimitPresets.websocket
+  );
+
+  if (result.allowed) {
+    return { ok: true };
+  }
+
+  return {
+    ok: false,
+    error: `Rate limit exceeded. Retry after ${Math.max(
+      1,
+      Math.ceil((result.resetAt - Date.now()) / 1000)
+    )} seconds.`,
+  };
+};
+
 const emitAudioProcessingResult = (
   io: Server,
   result: AudioChunkProcessResult
@@ -185,6 +218,15 @@ export const registerRealtimeSocket = (io: Server) => {
   io.on('connection', socket => {
     const handleSessionStart = async (payload: any, cb?: any) => {
       try {
+        const rateLimit = await enforceSocketRateLimit({
+          socket,
+          eventName: 'session:start',
+        });
+        if (rateLimit.ok === false) {
+          cb?.({ ok: false, error: rateLimit.error });
+          return;
+        }
+
         const session = await createSession({
           userId: socket.data.userId,
           subject: payload?.subject,
@@ -213,6 +255,16 @@ export const registerRealtimeSocket = (io: Server) => {
         );
         if (!session) {
           cb?.({ ok: false, error: 'Session not found' });
+          return;
+        }
+
+        const rateLimit = await enforceSocketRateLimit({
+          socket,
+          sessionId: payload.sessionId,
+          eventName: 'session:end',
+        });
+        if (rateLimit.ok === false) {
+          cb?.({ ok: false, error: rateLimit.error });
           return;
         }
 
@@ -258,23 +310,14 @@ export const registerRealtimeSocket = (io: Server) => {
         }
         socket.join(sessionId);
 
-        const now = Date.now();
-        const windowMs = 60_000;
-        const maxChunks = env.AUDIO_CHUNKS_PER_MINUTE || 60;
-        const windowStart = socket.data.audioWindowStart || now;
-        const elapsed = now - windowStart;
-        const resetWindow = elapsed >= windowMs;
-
-        if (!socket.data.audioWindowStart || resetWindow) {
-          socket.data.audioWindowStart = now;
-          socket.data.audioChunkCount = 0;
-        }
-
-        const nextCount = (socket.data.audioChunkCount || 0) + 1;
-        socket.data.audioChunkCount = nextCount;
-
-        if (nextCount > maxChunks) {
-          cb?.({ ok: false, error: 'Audio chunk rate limit exceeded' });
+        const rateLimit = await enforceSocketRateLimit({
+          socket,
+          sessionId,
+          eventName: 'audio:chunk',
+          audio: true,
+        });
+        if (rateLimit.ok === false) {
+          cb?.({ ok: false, error: rateLimit.error });
           return;
         }
 

@@ -4,6 +4,10 @@ import { createServer } from 'node:http';
 import { Server as SocketServer } from 'socket.io';
 import { registerRealtimeSocket } from './socket/realtime.socket.ts';
 import { env } from './config/env.ts';
+import {
+  startRetentionScheduler,
+  stopRetentionScheduler,
+} from '#src/services/retention.service.ts';
 
 const PORT = process.env.PORT || 8000;
 let isShuttingDown = false;
@@ -34,6 +38,7 @@ const io = new SocketServer(httpServer, {
 });
 
 registerRealtimeSocket(io);
+startRetentionScheduler();
 
 const server = httpServer.listen(PORT, () => {
   logger.info(`API server listening on ${PORT}`);
@@ -56,6 +61,7 @@ const shutdown = async (signal: string) => {
     });
 
   try {
+    stopRetentionScheduler();
     const redisShutdown = redisClient.isOpen ? redisClient.quit() : undefined;
     await Promise.allSettled([closeServer(), redisShutdown]);
     logger.info('API server shut down cleanly');

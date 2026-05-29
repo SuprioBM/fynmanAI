@@ -24,8 +24,8 @@
 
 ## P3 - Security And Scale
 
-- [ ] Add rate limits for REST endpoints and per-session websocket usage.
-- [ ] Add configurable retention policies for transcripts, uploaded resources, and analytics.
+- [x] Add rate limits for REST endpoints and per-session websocket usage.
+- [x] Add configurable retention policies for transcripts, uploaded resources, and analytics.
 
 ## P4 - Analytics Product APIs
 
