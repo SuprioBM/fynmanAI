@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -11,22 +11,26 @@ type Props = {
 
 export default function UploadModal({ open, onClose, onUpload }: Props) {
   const [files, setFiles] = useState<File[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Portal needs document to exist (Next.js SSR safety)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (!open || typeof document === "undefined") return null;
 
-  // Reset files when modal closes
-  useEffect(() => {
-    if (!open) setFiles([]);
-  }, [open]);
+  const resetModal = () => {
+    setFiles([]);
+    setUploadError(null);
+  };
 
-  if (!mounted || !open) return null;
+  const handleClose = () => {
+    if (uploading) return;
+
+    resetModal();
+    onClose();
+  };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
+    setUploadError(null);
     setFiles((prev) => {
       const existingNames = new Set(prev.map((f) => f.name));
       return [...prev, ...selected.filter((f) => !existingNames.has(f.name))];
@@ -36,6 +40,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const dropped = Array.from(e.dataTransfer.files);
+    setUploadError(null);
     setFiles((prev) => {
       const existingNames = new Set(prev.map((f) => f.name));
       return [...prev, ...dropped.filter((f) => !existingNames.has(f.name))];
@@ -43,18 +48,62 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
   };
 
   const removeFile = (name: string) => {
+    setUploadError(null);
     setFiles((prev) => prev.filter((f) => f.name !== name));
   };
 
-  const handleUpload = () => {
-    onUpload(files);
-    onClose();
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+
+    const response = await fetch("/api/parser/parse", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type") ?? "";
+      const details = contentType.includes("application/json")
+        ? await response.json().catch(() => null)
+        : await response.text().catch(() => null);
+      const message =
+        typeof details === "object" && details && "message" in details
+          ? String((details as { message?: string }).message)
+          : typeof details === "string" && details.trim()
+            ? details
+            : `Failed to upload ${file.name}`;
+
+      throw new Error(message);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (files.length === 0 || uploading) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      for (const file of files) {
+        await uploadFile(file);
+      }
+
+      onUpload(files);
+      resetModal();
+      onClose();
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "Failed to upload documents"
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   const getIcon = (name: string) => {
     if (name.endsWith(".pdf")) return "picture_as_pdf";
     if (name.endsWith(".md")) return "article";
-    if (name.endsWith(".json")) return "data_object";
+    if (name.endsWith(".docx") || name.endsWith(".pptx")) return "article";
     if (name.match(/\.(png|jpg|jpeg|gif|webp)$/)) return "image";
     return "draft";
   };
@@ -65,7 +114,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
       style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
       onClick={(e) => {
         // Close on backdrop click
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
@@ -81,7 +130,8 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-white text-lg font-bold">Upload Resources</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
+            disabled={uploading}
             className="text-[#c7c4d7] hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined">close</span>
@@ -107,12 +157,13 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
                 multiple
                 onChange={handleFiles}
                 className="hidden"
-                accept=".pdf,.md,.json,.txt,.png,.jpg,.jpeg"
+                accept=".pdf,.docx,.pptx,.md,.markdown,.txt,.png,.jpg,.jpeg"
+                disabled={uploading}
               />
             </label>
           </p>
           <p className="text-xs text-[#c7c4d7] opacity-50">
-            PDF, Markdown, JSON, Images supported
+            PDF, DOCX, PPTX, Markdown, text, and images supported
           </p>
         </div>
 
@@ -138,6 +189,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
                 </div>
                 <button
                   onClick={() => removeFile(f.name)}
+                  disabled={uploading}
                   className="text-[#c7c4d7] opacity-50 hover:opacity-100 transition-opacity"
                 >
                   <span className="material-symbols-outlined text-[16px]">
@@ -149,25 +201,40 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
           </div>
         )}
 
+        {uploadError && (
+          <p className="rounded-lg px-3 py-2 text-sm text-[#ffb4b4] bg-[#3a1f2a]">
+            {uploadError}
+          </p>
+        )}
+
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-1">
           <button
-            onClick={onClose}
-            className="px-4 py-2 text-[#c7c4d7] hover:text-white transition-colors text-sm"
+            onClick={handleClose}
+            disabled={uploading}
+            className="px-4 py-2 text-[#c7c4d7] hover:text-white transition-colors text-sm disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleUpload}
-            disabled={files.length === 0}
+            disabled={files.length === 0 || uploading}
             className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
             style={{
-              background: files.length === 0 ? "rgba(128,131,255,0.3)" : "#8083ff",
-              color: files.length === 0 ? "rgba(255,255,255,0.4)" : "#000",
-              cursor: files.length === 0 ? "not-allowed" : "pointer",
+              background:
+                files.length === 0 || uploading
+                  ? "rgba(128,131,255,0.3)"
+                  : "#8083ff",
+              color:
+                files.length === 0 || uploading
+                  ? "rgba(255,255,255,0.4)"
+                  : "#000",
+              cursor: files.length === 0 || uploading ? "not-allowed" : "pointer",
             }}
           >
-            Upload {files.length > 0 && `(${files.length})`}
+            {uploading
+              ? "Uploading..."
+              : `Upload ${files.length > 0 ? `(${files.length})` : ""}`}
           </button>
         </div>
       </div>

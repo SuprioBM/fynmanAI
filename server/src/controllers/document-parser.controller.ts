@@ -6,7 +6,10 @@ import {
   DocumentParserError,
   documentParserService,
 } from '#src/services/document-parser.service.ts';
-import { createResource } from '#src/services/resource.service.ts';
+import {
+  createResource,
+  getResourceById,
+} from '#src/services/resource.service.ts';
 import { ingestResourceText } from '#src/services/resource-ingest.service.ts';
 
 export const parseDocumentUploadHandler = async (
@@ -65,19 +68,37 @@ export const parseDocumentUploadHandler = async (
       },
     });
 
-    const ingest = await ingestResourceText({
-      resourceId: resource.id,
-      text: parsed.text,
-      subject,
-      topic,
-    });
+    let ingest: { chunkCount: number } | null = null;
+    let ingestError: string | undefined;
+
+    try {
+      ingest = await ingestResourceText({
+        resourceId: resource.id,
+        text: parsed.text,
+        subject,
+        topic,
+      });
+    } catch (error) {
+      ingestError =
+        error instanceof Error ? error.message : 'Failed to ingest document';
+
+      logger.error('Document parsed but ingestion failed', {
+        resourceId: resource.id,
+        error: ingestError,
+      });
+    }
+
+    const latestResource = await getResourceById(resource.id);
 
     return sendApiSuccess(res, {
-      status: 201,
-      message: 'Document parsed and ingested',
+      status: ingest ? 201 : 202,
+      message: ingest
+        ? 'Document parsed and ingested'
+        : 'Document parsed, but ingestion failed',
       data: {
-        resource,
+        resource: latestResource || resource,
         ingest,
+        ingestError,
         parser: {
           metadata: parsed.metadata,
         },

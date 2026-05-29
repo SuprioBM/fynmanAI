@@ -22,6 +22,13 @@ export const authMiddleware = async (
     const token = authHeader.split(' ')[1];
 
     const getData = await verifyAccessToken(token);
+    if (!getData) {
+      return sendApiError(res, {
+        status: 401,
+        message: 'Invalid or expired token',
+      });
+    }
+
     const { userId, sessionId } = getData || {};
 
     if (!userId || !sessionId) {
