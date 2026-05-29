@@ -21,6 +21,8 @@ export const useVoiceRecorder = (onLevel?: (level: number) => void) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
+  const stopResolveRef = useRef<(() => void) | null>(null);
+  const stopRejectRef = useRef<((error: unknown) => void) | null>(null);
 
   const { socket, sessionId, sessionReady } = useVoiceStore();
 
@@ -71,25 +73,31 @@ export const useVoiceRecorder = (onLevel?: (level: number) => void) => {
     };
 
     recorder.onstop = async () => {
-      const audioBlob = new Blob(chunksRef.current, {
-        type: "audio/webm",
-      });
+      let stopError: unknown = null;
 
-      const startedAt = startTimeRef.current ?? Date.now();
+      try {
+        const audioBlob = new Blob(chunksRef.current, {
+          type: "audio/webm",
+        });
 
-      if (audioBlob.size > 0) {
-        console.log("Sending full audio", {
-          sessionId,
-          bytes: audioBlob.size,
-        });
-        const durationMs = Math.max(0, Date.now() - startedAt);
-        await sendAudioChunk(socket, sessionId, audioBlob, {
-          fileName: `session-${sessionId}-${startedAt}.webm`,
-          mimeType: "audio/webm",
-          startTimeMs: 0,
-          endTimeMs: durationMs,
-          endMessage: "user:end",
-        });
+        const startedAt = startTimeRef.current ?? Date.now();
+
+        if (audioBlob.size > 0) {
+          console.log("Sending full audio", {
+            sessionId,
+            bytes: audioBlob.size,
+          });
+          const durationMs = Math.max(0, Date.now() - startedAt);
+          await sendAudioChunk(socket, sessionId, audioBlob, {
+            fileName: `session-${sessionId}-${startedAt}.webm`,
+            mimeType: "audio/webm",
+            startTimeMs: 0,
+            endTimeMs: durationMs,
+            endMessage: "user:end",
+          });
+        }
+      } catch (error) {
+        stopError = error;
       }
 
       streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -108,6 +116,15 @@ export const useVoiceRecorder = (onLevel?: (level: number) => void) => {
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
+
+      if (stopError) {
+        stopRejectRef.current?.(stopError);
+      } else {
+        stopResolveRef.current?.();
+      }
+
+      stopResolveRef.current = null;
+      stopRejectRef.current = null;
     };
 
     recorder.start();
@@ -115,8 +132,22 @@ export const useVoiceRecorder = (onLevel?: (level: number) => void) => {
 
   const stopRecording = () => {
     const recorder = recorderRef.current;
-    if (!recorder || recorder.state === "inactive") return;
-    recorder.stop();
+    if (!recorder || recorder.state === "inactive") {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      stopResolveRef.current = resolve;
+      stopRejectRef.current = reject;
+
+      try {
+        recorder.stop();
+      } catch (error) {
+        stopResolveRef.current = null;
+        stopRejectRef.current = null;
+        reject(error);
+      }
+    });
   };
 
   return {

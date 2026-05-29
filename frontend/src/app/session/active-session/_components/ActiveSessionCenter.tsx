@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SessionStatusBadge from "./SessionStatusBadge";
 import AIAvatar from "./AIAvatar";
 import TranscriptFeed from "./TranscriptFeed";
@@ -11,7 +11,7 @@ import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useVoiceStore } from "@/store/useVoiceStore";
 import { destroySocket } from "@/lib/socket/socket";
 import { useAuth } from "@/context/auth/AuthContext";
-import { sendTextInput } from "@/services/voice.service";
+import { endUserSession, sendTextInput } from "@/services/voice.service";
 
 export default function ActiveSessionCenter() {
   const { accessToken } = useAuth();
@@ -45,7 +45,49 @@ export default function ActiveSessionCenter() {
       socket?.disconnect();
       destroySocket();
     };
-  }, [accessToken]);
+  }, [accessToken, connect]);
+  const handleMicClick = useCallback(async () => {
+    if (!sessionReady) {
+      console.log("Mic blocked: session not ready");
+      return;
+    }
+
+    setIsRecording(true);
+    try {
+      await startRecording();
+    } catch (error) {
+      console.error("Failed to start recording", error);
+      setIsRecording(false);
+    }
+  }, [sessionReady, startRecording]);
+
+  const handleStopClick = useCallback(async () => {
+    setIsRecording(false);
+    setVoiceLevel(0);
+
+    try {
+      await stopRecording();
+
+      if (!socket || !sessionId) {
+        return;
+      }
+
+      await endUserSession(socket, sessionId);
+    } catch (error) {
+      console.error("Failed to end user session", error);
+    }
+  }, [sessionId, socket, stopRecording]);
+
+  const handleKeyboardClick = useCallback(() => {
+    setShowTextInput((prev) => !prev);
+  }, []);
+
+  const handleSendText = () => {
+    if (!socket || !sessionId || !textInput.trim()) return;
+    sendTextInput(socket, sessionId, textInput.trim());
+    setTextInput("");
+    setShowTextInput(false);
+  };
 
   useEffect(() => {
     const handleMic = () => {
@@ -53,7 +95,7 @@ export default function ActiveSessionCenter() {
     };
 
     const handleStop = () => {
-      handleStopClick();
+      void handleStopClick();
     };
 
     const handleText = () => {
@@ -68,38 +110,7 @@ export default function ActiveSessionCenter() {
       window.removeEventListener("voice:stop", handleStop);
       window.removeEventListener("voice:text", handleText);
     };
-  }, [sessionReady]);
-  const handleMicClick = async () => {
-    if (!sessionReady) {
-      console.log("Mic blocked: session not ready");
-      return;
-    }
-
-    setIsRecording(true);
-    try {
-      await startRecording();
-    } catch (error) {
-      console.error("Failed to start recording", error);
-      setIsRecording(false);
-    }
-  };
-
-  const handleStopClick = () => {
-    stopRecording();
-    setIsRecording(false);
-    setVoiceLevel(0);
-  };
-
-  const handleKeyboardClick = () => {
-    setShowTextInput((prev) => !prev);
-  };
-
-  const handleSendText = () => {
-    if (!socket || !sessionId || !textInput.trim()) return;
-    sendTextInput(socket, sessionId, textInput.trim());
-    setTextInput("");
-    setShowTextInput(false);
-  };
+  }, [handleMicClick, handleStopClick, handleKeyboardClick]);
 
   return (
     <section className="h-[calc(100%-3.5rem)] flex flex-col items-center relative">

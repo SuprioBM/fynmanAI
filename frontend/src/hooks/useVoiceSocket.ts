@@ -1,6 +1,23 @@
+import { useCallback } from "react";
+import type { Socket } from "socket.io-client";
 import { createSocket } from "@/lib/socket/socket";
 import { startSession } from "@/services/voice.service";
 import { useVoiceStore } from "@/store/useVoiceStore";
+
+type TranscriptChunkEvent = {
+  chunk?: {
+    text?: string;
+  };
+};
+
+type AnalysisQuestionEvent = {
+  evaluation?: {
+    question?: string;
+    text?: string;
+  };
+  question?: string;
+  text?: string;
+};
 
 export const useVoiceSocket = (token: string) => {
   const {
@@ -10,13 +27,12 @@ export const useVoiceSocket = (token: string) => {
     setConnected,
     setSessionReady,
     setAiFeedback,
-    socket: existingSocket,
     resourceIds,
     subject,
     topic,
   } = useVoiceStore();
 
-  const startSessionFlow = async (socket: any) => {
+  const startSessionFlow = useCallback(async (socket: Socket) => {
     setSessionReady(false);
 
     try {
@@ -32,9 +48,15 @@ export const useVoiceSocket = (token: string) => {
       console.error("Session start failed:", err);
       setSessionReady(false);
     }
-  };
+  }, [
+    resourceIds,
+    setSessionId,
+    setSessionReady,
+    subject,
+    topic,
+  ]);
 
-  const wireSocket = (socket: any) => {
+  const wireSocket = useCallback((socket: Socket) => {
     socket.off("connect");
     socket.off("disconnect");
     socket.off("transcript:chunk");
@@ -51,13 +73,13 @@ export const useVoiceSocket = (token: string) => {
       setSessionReady(false);
     });
 
-    socket.on("transcript:chunk", (data) => {
+    socket.on("transcript:chunk", (data: TranscriptChunkEvent) => {
       if (data?.chunk?.text) {
         addTranscript(data.chunk.text);
       }
     });
 
-    socket.on("analysis:question", (data) => {
+    socket.on("analysis:question", (data: AnalysisQuestionEvent) => {
       const evaluation = data?.evaluation;
       setAiFeedback(
         evaluation?.question ??
@@ -67,9 +89,16 @@ export const useVoiceSocket = (token: string) => {
           JSON.stringify(data)
       );
     });
-  };
+  }, [
+    addTranscript,
+    setAiFeedback,
+    setConnected,
+    setSessionReady,
+    startSessionFlow,
+  ]);
 
-  const connect = () => {
+  const connect = useCallback(() => {
+    const existingSocket = useVoiceStore.getState().socket;
     const socket = existingSocket ?? createSocket(token);
     setSocket(socket);
     wireSocket(socket);
@@ -79,7 +108,7 @@ export const useVoiceSocket = (token: string) => {
     }
 
     return socket;
-  };
+  }, [setSocket, token, wireSocket]);
 
   return { connect };
 };

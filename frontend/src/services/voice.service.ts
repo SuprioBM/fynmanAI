@@ -1,3 +1,5 @@
+import type { Socket } from "socket.io-client";
+
 type SessionStartPayload = {
   subject?: string;
   topic?: string;
@@ -5,11 +7,31 @@ type SessionStartPayload = {
   resourceIds?: string[];
 };
 
-export const startSession = (socket: any, payload: SessionStartPayload = {}) =>
-  new Promise<any>((resolve, reject) => {
-    socket.emit("session:start", payload, (res: any) => {
-      if (res.ok) resolve(res.session);
-      else reject(res.error);
+type SessionStartResponse = {
+  ok?: boolean;
+  session?: {
+    id: string;
+  };
+  error?: string;
+};
+
+type SocketAck = {
+  ok?: boolean;
+  error?: string;
+};
+
+export const startSession = (
+  socket: Socket,
+  payload: SessionStartPayload = {}
+) =>
+  new Promise<{ id: string }>((resolve, reject) => {
+    socket.emit("session:start", payload, (res: SessionStartResponse) => {
+      if (res.ok && res.session) {
+        resolve(res.session);
+        return;
+      }
+
+      reject(res.error || "Failed to start session");
     });
   });
 
@@ -32,26 +54,35 @@ type AudioChunkOptions = {
 };
 
 export const sendAudioChunk = async (
-  socket: any,
+  socket: Socket,
   sessionId: string,
   blob: Blob,
   options: AudioChunkOptions = {}
 ) => {
   const base64 = await blobToBase64(blob);
 
-  socket.emit("audio:chunk", {
-    sessionId,
-    audioBase64: base64,
-    fileName: options.fileName || `chunk-${Date.now()}.webm`,
-    mimeType: options.mimeType || blob.type || "audio/webm",
-    startTimeMs: options.startTimeMs,
-    endTimeMs: options.endTimeMs,
-    endMessage: options.endMessage,
+  return new Promise<void>((resolve, reject) => {
+    socket.emit("audio:chunk", {
+      sessionId,
+      audioBase64: base64,
+      fileName: options.fileName || `chunk-${Date.now()}.webm`,
+      mimeType: options.mimeType || blob.type || "audio/webm",
+      startTimeMs: options.startTimeMs,
+      endTimeMs: options.endTimeMs,
+      endMessage: options.endMessage,
+    }, (res: SocketAck) => {
+      if (res?.ok) {
+        resolve();
+        return;
+      }
+
+      reject(new Error(res?.error || "Failed to send audio chunk"));
+    });
   });
 };
 
 export const sendTextInput = (
-  socket: any,
+  socket: Socket,
   sessionId: string,
   text: string
 ) => {
@@ -60,3 +91,15 @@ export const sendTextInput = (
     text,
   });
 };
+
+export const endUserSession = (socket: Socket, sessionId: string) =>
+  new Promise<void>((resolve, reject) => {
+    socket.emit("user:end", { sessionId }, (res: SocketAck) => {
+      if (res?.ok) {
+        resolve();
+        return;
+      }
+
+      reject(new Error(res?.error || "Failed to end user session"));
+    });
+  });
