@@ -1,5 +1,9 @@
 import prisma from '#src/config/database.ts';
 import { Prisma } from '#src/generated/client.ts';
+import {
+  deletePoints,
+  getQdrantCollection,
+} from '#src/services/qdrant.service.ts';
 
 export type CreateResourceInput = {
   userId: string;
@@ -14,6 +18,33 @@ export type CreateResourceInput = {
 };
 
 type ResourceStatus = 'PENDING' | 'PROCESSING' | 'READY' | 'FAILED';
+
+export const listResourcesForUser = async (
+  userId: string,
+  filters: {
+    status?: ResourceStatus;
+    subject?: string;
+    topic?: string;
+  } = {}
+) => {
+  return prisma.resource.findMany({
+    where: {
+      userId,
+      status: filters.status,
+      subject: filters.subject,
+      topic: filters.topic,
+    },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: {
+          chunks: true,
+          sessions: true,
+        },
+      },
+    },
+  });
+};
 
 export const createResource = async (data: CreateResourceInput) => {
   return prisma.resource.create({
@@ -62,6 +93,63 @@ export const getResourceById = async (resourceId: string) =>
     where: { id: resourceId },
     include: { chunks: true },
   });
+
+export const updateResource = async (params: {
+  resourceId: string;
+  title?: string;
+  subject?: string | null;
+  topic?: string | null;
+  metadata?: Record<string, unknown> | null;
+}) =>
+  prisma.resource.update({
+    where: { id: params.resourceId },
+    data: {
+      title: params.title,
+      subject: params.subject,
+      topic: params.topic,
+      metadata:
+        params.metadata === null
+          ? Prisma.JsonNull
+          : (params.metadata as Prisma.InputJsonValue | undefined),
+    },
+  });
+
+export const deleteResource = async (resourceId: string) => {
+  const resource = await getResourceById(resourceId);
+  if (!resource) {
+    return null;
+  }
+
+  const pointIds = resource.chunks
+    .map(chunk => chunk.vectorId)
+    .filter((vectorId): vectorId is string => Boolean(vectorId));
+
+  await deletePoints(getQdrantCollection(), pointIds);
+
+  return prisma.resource.delete({
+    where: { id: resourceId },
+  });
+};
+
+export const clearResourceIngestion = async (resourceId: string) => {
+  const resource = await getResourceById(resourceId);
+  if (!resource) {
+    return;
+  }
+
+  const pointIds = resource.chunks
+    .map(chunk => chunk.vectorId)
+    .filter((vectorId): vectorId is string => Boolean(vectorId));
+
+  await deletePoints(getQdrantCollection(), pointIds);
+
+  await prisma.embedding.deleteMany({
+    where: { resourceId },
+  });
+  await prisma.resourceChunk.deleteMany({
+    where: { resourceId },
+  });
+};
 
 export const attachResourceToSession = async (
   sessionId: string,

@@ -85,6 +85,22 @@ export const upsertPoints = async (
   });
 };
 
+export const deletePoints = async (
+  collectionName: string,
+  pointIds: Array<string | number>
+): Promise<void> => {
+  if (!pointIds.length) {
+    return;
+  }
+
+  await requestQdrant(`/collections/${collectionName}/points/delete?wait=true`, {
+    method: 'POST',
+    body: {
+      points: pointIds,
+    },
+  });
+};
+
 export const searchPoints = async (params: {
   collectionName: string;
   vector: number[];

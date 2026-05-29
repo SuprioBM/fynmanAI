@@ -40,3 +40,29 @@ export const normalizeDomainScope = (scope: DomainScope): DomainScope => {
     goal: normalizedGoal || undefined,
   };
 };
+
+const DOMAIN_RUBRICS: Record<string, string[]> = {
+  math: [
+    'Checks definitions and assumptions before applying formulas.',
+    'Explains why each transformation or inference is valid.',
+    'Connects symbolic steps to the underlying concept or theorem.',
+    'Identifies edge cases, constraints, and units where relevant.',
+    'Uses examples or counterexamples to test understanding.',
+  ],
+  physics: [
+    'Names the physical principle or conservation law being used.',
+    'Explains causal relationships rather than only quoting equations.',
+    'Tracks variables, units, assumptions, and idealizations.',
+    'Relates mathematical form to physical intuition.',
+    'Distinguishes definitions, laws, models, and empirical observations.',
+  ],
+};
+
+export const getDomainRubric = (subject?: string): string[] => {
+  const normalized = subject?.trim().toLowerCase();
+  if (!normalized) {
+    return [];
+  }
+
+  return DOMAIN_RUBRICS[normalized] || [];
+};

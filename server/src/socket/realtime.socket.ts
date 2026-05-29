@@ -194,7 +194,11 @@ export const registerRealtimeSocket = (io: Server) => {
           endTimeMs: payload?.endTimeMs,
         });
 
-        socket.to(sessionId).emit('transcript:chunk', {
+        io.to(sessionId).emit('transcript:chunk', {
+          sessionId,
+          chunk,
+        });
+        io.to(sessionId).emit('transcript_update', {
           sessionId,
           chunk,
         });
@@ -209,6 +213,10 @@ export const registerRealtimeSocket = (io: Server) => {
 
         if (evaluation) {
           io.to(sessionId).emit('analysis:question', {
+            sessionId,
+            evaluation,
+          });
+          io.to(sessionId).emit('probing_question', {
             sessionId,
             evaluation,
           });

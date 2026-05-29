@@ -10,6 +10,81 @@ import { trackAnalyticsEvent } from '#src/services/analytics.service.ts';
 
 type SessionStatus = 'ACTIVE' | 'ENDED';
 
+const normalizeScopeValue = (value?: string | null): string | undefined => {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed || undefined;
+};
+
+const validateSessionResources = async (params: {
+  userId: string;
+  resourceIds?: string[];
+  subject?: string;
+  topic?: string;
+}) => {
+  const uniqueResourceIds = Array.from(new Set(params.resourceIds || []));
+  if (!uniqueResourceIds.length) {
+    return;
+  }
+
+  const resources = await prisma.resource.findMany({
+    where: { id: { in: uniqueResourceIds } },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      subject: true,
+      topic: true,
+    },
+  });
+  const resourcesById = new Map(resources.map(resource => [resource.id, resource]));
+  const missing = uniqueResourceIds.filter(id => !resourcesById.has(id));
+  const foreign = resources.filter(resource => resource.userId !== params.userId);
+  const notReady = resources.filter(resource => resource.status !== 'READY');
+  const subject = normalizeScopeValue(params.subject);
+  const topic = normalizeScopeValue(params.topic);
+  const subjectMismatches = subject
+    ? resources.filter(
+        resource =>
+          normalizeScopeValue(resource.subject) &&
+          normalizeScopeValue(resource.subject) !== subject
+      )
+    : [];
+  const topicMismatches = topic
+    ? resources.filter(
+        resource =>
+          normalizeScopeValue(resource.topic) &&
+          normalizeScopeValue(resource.topic) !== topic
+      )
+    : [];
+
+  const problems: string[] = [];
+  if (missing.length) {
+    problems.push(`missing: ${missing.join(', ')}`);
+  }
+  if (foreign.length) {
+    problems.push(`not owned by user: ${foreign.map(item => item.id).join(', ')}`);
+  }
+  if (notReady.length) {
+    problems.push(
+      `not ready: ${notReady.map(item => `${item.id}(${item.status})`).join(', ')}`
+    );
+  }
+  if (subjectMismatches.length) {
+    problems.push(
+      `subject mismatch: ${subjectMismatches.map(item => item.id).join(', ')}`
+    );
+  }
+  if (topicMismatches.length) {
+    problems.push(
+      `topic mismatch: ${topicMismatches.map(item => item.id).join(', ')}`
+    );
+  }
+
+  if (problems.length) {
+    throw new Error(`Invalid session resources: ${problems.join('; ')}`);
+  }
+};
+
 export const createSession = async (params: {
   userId: string;
   subject?: string;
@@ -21,6 +96,13 @@ export const createSession = async (params: {
     subject: params.subject,
     topic: params.topic,
     goal: params.goal,
+  });
+
+  await validateSessionResources({
+    userId: params.userId,
+    resourceIds: params.resourceIds,
+    subject: scope.subject,
+    topic: scope.topic,
   });
 
   const session = await prisma.session.create({
@@ -79,11 +161,61 @@ export const endSession = async (sessionId: string) =>
     },
   });
 
+export const listSessionsForUser = async (
+  userId: string,
+  filters: { status?: SessionStatus } = {}
+) =>
+  prisma.session.findMany({
+    where: {
+      userId,
+      status: filters.status,
+    },
+    orderBy: { startedAt: 'desc' },
+    include: {
+      _count: {
+        select: {
+          transcriptChunks: true,
+          evaluations: true,
+          resources: true,
+        },
+      },
+      evaluations: {
+        where: { type: 'FINAL' },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+  });
+
 export const getSessionById = async (sessionId: string) =>
   prisma.session.findUnique({
     where: { id: sessionId },
     include: {
       resources: true,
+    },
+  });
+
+export const getSessionDetailById = async (sessionId: string) =>
+  prisma.session.findUnique({
+    where: { id: sessionId },
+    include: {
+      transcriptChunks: {
+        orderBy: { sequence: 'asc' },
+      },
+      evaluations: {
+        orderBy: { createdAt: 'asc' },
+      },
+      resources: {
+        include: {
+          resource: {
+            include: {
+              _count: {
+                select: { chunks: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
