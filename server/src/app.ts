@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.route.ts';
 import usersRoutes from './routes/user.route.ts';
 import resourceRoutes from './routes/resource.route.ts';
 import sessionRoutes from './routes/session.route.ts';
+import analyticsRoutes from './routes/analytics.route.ts';
 import documentParserRoutes from './routes/document-parser.route.ts';
 import healthRoutes from './routes/health.route.ts';
 import { sendApiError, sendApiSuccess } from '#src/utils/api-response.ts';
@@ -92,6 +93,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', usersRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/parser', documentParserRoutes);
 
 app.use((req, res) => {

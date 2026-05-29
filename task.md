@@ -29,7 +29,7 @@
 
 ## P4 - Analytics Product APIs
 
-- [ ] Add session analytics endpoints.
-- [ ] Add user progress endpoints across sessions.
-- [ ] Add concept coverage and topic drift trend endpoints.
-- [ ] Add export/report endpoints for final evaluations.
+- [x] Add session analytics endpoints.
+- [x] Add user progress endpoints across sessions.
+- [x] Add concept coverage and topic drift trend endpoints.
+- [x] Add export/report endpoints for final evaluations.
