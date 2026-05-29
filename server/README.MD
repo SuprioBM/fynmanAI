@@ -19,6 +19,37 @@ npm run dev
 - `npm run build`
 - `npm run start`
 - `npm run test`
+- `npm run smoke:mvp`
+
+## MVP Smoke Check
+
+Run the server with demo env configured, then run:
+
+```bash
+npm run smoke:mvp
+```
+
+The script verifies the happy path:
+
+- create or reuse a password user
+- create a `TEXT` resource
+- confirm the resource is `READY` with chunks
+- start a session with that resource
+- append transcript text
+- request realtime feedback
+- end the session
+- fetch the final report
+
+Optional overrides:
+
+```bash
+MVP_API_BASE_URL=http://localhost:8000 \
+MVP_EMAIL=demo@example.com \
+MVP_PASSWORD='SmokeTest1!' \
+npm run smoke:mvp
+```
+
+Without `MVP_EMAIL`, the script creates a timestamped smoke user.
 
 ## MVP Demo API Contract
 

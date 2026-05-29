@@ -100,6 +100,10 @@ These are the only server items that can block a successful demo.
 - The team can run one repeatable check before the demo.
 - The check proves the core MVP path works.
 
+**Implemented:**
+- `server/scripts/mvp-smoke.mjs` exercises the demo happy path against a running server.
+- Run it with `npm run smoke:mvp` from `server/`.
+
 ### P1 - Document The Demo API Contract
 
 **Feature:** Frontend/server integration.
@@ -121,6 +125,9 @@ These are the only server items that can block a successful demo.
 
 **Done when:**
 - A teammate can run the MVP flow without reading server internals.
+
+**Implemented:**
+- `server/README.MD` documents the MVP smoke check, canonical `TEXT` resource path, session payloads, transcript/audio payloads, feedback/report shapes, and demo env vars.
 
 ## MVP Nice To Have
 
@@ -150,4 +157,3 @@ Only do these if the must-complete items are stable.
 - Use local parsing for demo.
 - Show upload status clearly.
 - Skip S3 unless the deployment environment needs it.
-
