@@ -10,21 +10,6 @@ import { trackAnalyticsEvent } from '#src/services/analytics.service.ts';
 
 type SessionStatus = 'ACTIVE' | 'ENDED';
 
-export const normalizeSessionResourceIds = (params: {
-  resourceId?: string;
-  resourceIds?: string[];
-}): string[] =>
-  Array.from(
-    new Set(
-      [
-        ...(params.resourceIds || []),
-        ...(params.resourceId ? [params.resourceId] : []),
-      ]
-        .map(id => id.trim())
-        .filter(Boolean)
-    )
-  );
-
 const normalizeScopeValue = (value?: string | null): string | undefined => {
   const trimmed = value?.trim().toLowerCase();
   return trimmed || undefined;
@@ -105,7 +90,6 @@ export const createSession = async (params: {
   subject?: string;
   topic?: string;
   goal?: string;
-  resourceId?: string;
   resourceIds?: string[];
 }) => {
   const scope = normalizeDomainScope({
@@ -113,11 +97,10 @@ export const createSession = async (params: {
     topic: params.topic,
     goal: params.goal,
   });
-  const resourceIds = normalizeSessionResourceIds(params);
 
   await validateSessionResources({
     userId: params.userId,
-    resourceIds,
+    resourceIds: params.resourceIds,
     subject: scope.subject,
     topic: scope.topic,
   });
@@ -131,8 +114,8 @@ export const createSession = async (params: {
     },
   });
 
-  if (resourceIds.length) {
-    await attachResourceToSession(session.id, resourceIds);
+  if (params.resourceIds?.length) {
+    await attachResourceToSession(session.id, params.resourceIds);
   }
 
   await setSessionMetadata(session.id, {
@@ -140,7 +123,7 @@ export const createSession = async (params: {
     subject: scope.subject,
     topic: scope.topic,
     goal: scope.goal,
-    resourceIds,
+    resourceIds: params.resourceIds,
     createdAt: new Date().toISOString(),
   });
 
@@ -151,7 +134,7 @@ export const createSession = async (params: {
       subject: scope.subject,
       topic: scope.topic,
       goal: scope.goal,
-      resourceIds,
+      resourceIds: params.resourceIds,
     },
   });
 
