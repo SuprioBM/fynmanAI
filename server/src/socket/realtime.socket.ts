@@ -14,6 +14,7 @@ import {
   generateSessionStartResponse,
 } from '#src/services/evaluation.service.ts';
 import { preprocessTranscriptText } from '#src/services/transcript-preprocess.service.ts';
+import { env } from '#config/env.ts';
 import logger from '#config/logger.ts';
 
 const getTokenFromSocket = (socket: Socket): string | null => {
@@ -31,6 +32,8 @@ const getTokenFromSocket = (socket: Socket): string | null => {
 };
 
 export const registerRealtimeSocket = (io: Server) => {
+  const realtimeAnalysisTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
   io.use(async (socket, next) => {
     try {
       const token = getTokenFromSocket(socket);
@@ -68,7 +71,6 @@ export const registerRealtimeSocket = (io: Server) => {
   const generateAndEmitRealtimeResponse = async (params: {
     sessionId: string;
     userId: string;
-    text: string;
   }) => {
     const session = await getSessionById(params.sessionId);
     if (!session || session.userId !== params.userId) {
@@ -77,7 +79,6 @@ export const registerRealtimeSocket = (io: Server) => {
 
     const evaluation = await generateRealtimeFeedback({
       sessionId: params.sessionId,
-      transcriptOverride: params.text,
       subject: session.subject || undefined,
       topic: session.topic || undefined,
       resourceIds: session.resources.map(item => item.resourceId),
@@ -89,6 +90,39 @@ export const registerRealtimeSocket = (io: Server) => {
     }
 
     return evaluation;
+  };
+
+  const clearScheduledRealtimeResponse = (sessionId: string) => {
+    const timer = realtimeAnalysisTimers.get(sessionId);
+    if (!timer) {
+      return;
+    }
+
+    clearTimeout(timer);
+    realtimeAnalysisTimers.delete(sessionId);
+  };
+
+  const scheduleRealtimeResponse = (params: {
+    sessionId: string;
+    userId: string;
+  }) => {
+    if (realtimeAnalysisTimers.has(params.sessionId)) {
+      return;
+    }
+
+    const delayMs = (env.LLM_ANALYSIS_INTERVAL || 30) * 1000;
+    const timer = setTimeout(async () => {
+      realtimeAnalysisTimers.delete(params.sessionId);
+
+      try {
+        await generateAndEmitRealtimeResponse(params);
+      } catch (error) {
+        logger.error(`Realtime LLM response failed: ${String(error)}`);
+      }
+    }, delayMs);
+
+    timer.unref?.();
+    realtimeAnalysisTimers.set(params.sessionId, timer);
   };
 
   const handleEndSession = async (socket: Socket, payload: any, cb?: any) => {
@@ -104,6 +138,7 @@ export const registerRealtimeSocket = (io: Server) => {
         return;
       }
 
+      clearScheduledRealtimeResponse(payload.sessionId);
       await endSession(payload.sessionId);
       const evaluation = await generateFinalEvaluation({
         sessionId: payload.sessionId,
@@ -198,10 +233,9 @@ export const registerRealtimeSocket = (io: Server) => {
           chunk,
         });
 
-        await generateAndEmitRealtimeResponse({
+        scheduleRealtimeResponse({
           sessionId,
           userId: socket.data.userId,
-          text: transcript.text,
         });
 
         cb?.({ ok: true, chunk });
@@ -246,10 +280,9 @@ export const registerRealtimeSocket = (io: Server) => {
           chunk,
         });
 
-        await generateAndEmitRealtimeResponse({
+        scheduleRealtimeResponse({
           sessionId,
           userId: socket.data.userId,
-          text: chunk.text,
         });
 
         cb?.({ ok: true, chunk });
