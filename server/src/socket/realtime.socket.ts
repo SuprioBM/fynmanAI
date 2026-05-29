@@ -353,7 +353,7 @@ export const registerRealtimeSocket = (io: Server) => {
           sequence: validation.sequence,
         };
 
-        if (env.ENABLE_AUDIO_PROCESSING_QUEUE === false) {
+        if (env.ENABLE_AUDIO_PROCESSING_QUEUE !== true) {
           const result = await processAudioChunk(audioJob);
           emitAudioProcessingResult(io, result);
           cb?.({ ok: true, chunk: result.chunk, skipped: result.skipped });

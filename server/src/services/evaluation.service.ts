@@ -142,16 +142,22 @@ const parseFinalEvaluation = (raw: string): FinalEvaluationPayload | null => {
 
   const summary = typeof parsed.summary === 'string' ? parsed.summary : '';
   const confidenceScore = coerceNumber(parsed.confidence_score);
-  return {
+  if (!summary.trim() || confidenceScore === null) {
+    return null;
+  }
+
+  const payload = {
     summary,
     strengths: coerceStringArray(parsed.strengths),
     weaknesses: coerceStringArray(parsed.weaknesses),
     missed_concepts: coerceStringArray(parsed.missed_concepts),
     follow_up: coerceStringArray(parsed.follow_up),
-    confidence_score: confidenceScore ?? 0,
+    confidence_score: confidenceScore,
     topic_drift: coerceBoolean(parsed.topic_drift),
     cited_evidence: coerceStringArray(parsed.cited_evidence),
   };
+
+  return payload;
 };
 
 const parseRealtimeFeedback = (raw: string): RealtimeFeedbackPayload | null => {
@@ -160,14 +166,53 @@ const parseRealtimeFeedback = (raw: string): RealtimeFeedbackPayload | null => {
     return null;
   }
 
-  return {
+  const payload = {
     questions: coerceStringArray(parsed.questions),
     clarifications: coerceStringArray(parsed.clarifications),
     detected_gaps: coerceStringArray(parsed.detected_gaps),
     topic_drift: coerceBoolean(parsed.topic_drift),
     citations: coerceStringArray(parsed.citations),
   };
+
+  return payload.questions.length ? payload : null;
 };
+
+const truncateText = (value: string, maxLength: number): string => {
+  const trimmed = value.replace(/\s+/g, ' ').trim();
+  if (trimmed.length <= maxLength) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, maxLength - 1).trim()}...`;
+};
+
+const fallbackRealtimeFeedback = (raw: string): RealtimeFeedbackPayload => {
+  const question = truncateText(raw, 500);
+
+  return {
+    questions: [
+      question ||
+        'Can you explain the core idea again and connect it to the learning resource?',
+    ],
+    clarifications: [],
+    detected_gaps: [],
+    topic_drift: false,
+    citations: [],
+  };
+};
+
+const fallbackFinalEvaluation = (raw: string): FinalEvaluationPayload => ({
+  summary:
+    truncateText(raw, 700) ||
+    'Final evaluation could not be parsed, but the session completed.',
+  strengths: [],
+  weaknesses: [],
+  missed_concepts: [],
+  follow_up: [],
+  confidence_score: 50,
+  topic_drift: false,
+  cited_evidence: [],
+});
 
 const getContextTexts = (context: RetrievedContextChunk[]): string[] =>
   context.map(chunk => chunk.text);
@@ -297,13 +342,18 @@ export const formatEvaluationForClient = <T extends EvaluationRecord>(
   if (evaluation.type === 'ROLLING') {
     const followUp = asRecord(evaluation.followUp);
     const parsed = parseRealtimeFeedback(evaluation.content);
-    const structured: RealtimeFeedbackPayload = parsed || {
+    const persistedFallback: RealtimeFeedbackPayload = {
       questions: coerceStringArray(followUp.questions),
       clarifications: coerceStringArray(followUp.clarifications),
       detected_gaps: coerceStringArray(evaluation.weaknesses),
       topic_drift: Boolean(evaluation.topicDrift),
       citations: citedEvidence,
     };
+    const structured: RealtimeFeedbackPayload =
+      parsed ||
+      (persistedFallback.questions.length
+        ? persistedFallback
+        : fallbackRealtimeFeedback(evaluation.content));
 
     return {
       ...evaluation,
@@ -316,7 +366,7 @@ export const formatEvaluationForClient = <T extends EvaluationRecord>(
   }
 
   const parsed = parseFinalEvaluation(evaluation.content);
-  const structured: FinalEvaluationPayload = parsed || {
+  const persistedFallback: FinalEvaluationPayload = {
     summary: evaluation.summary || '',
     strengths: coerceStringArray(evaluation.strengths),
     weaknesses: coerceStringArray(evaluation.weaknesses),
@@ -326,6 +376,11 @@ export const formatEvaluationForClient = <T extends EvaluationRecord>(
     topic_drift: Boolean(evaluation.topicDrift),
     cited_evidence: citedEvidence,
   };
+  const structured: FinalEvaluationPayload =
+    parsed ||
+    (persistedFallback.summary.trim()
+      ? persistedFallback
+      : fallbackFinalEvaluation(evaluation.content));
 
   return {
     ...evaluation,
@@ -394,6 +449,7 @@ export const generateRealtimeFeedback = async (params: {
     { purpose: 'realtime', temperature: 0.4 }
   );
   const parsed = parseRealtimeFeedback(completion.content);
+  const structured = parsed || fallbackRealtimeFeedback(completion.content);
   const contextTexts = getContextTexts(context);
   const citations = getCitations(context);
   const transcriptAnalytics = analyzeTranscriptQuality({
@@ -407,23 +463,21 @@ export const generateRealtimeFeedback = async (params: {
     data: {
       sessionId: params.sessionId,
       type: 'ROLLING',
-      content: parsed ? JSON.stringify(parsed) : completion.content,
-      weaknesses: parsed?.detected_gaps || undefined,
-      followUp: parsed
-        ? {
-            questions: parsed.questions,
-            clarifications: parsed.clarifications,
-          }
-        : undefined,
-      topicDrift: parsed?.topic_drift ?? transcriptAnalytics.topicDrift,
+      content: JSON.stringify(structured),
+      weaknesses: structured.detected_gaps,
+      followUp: {
+        questions: structured.questions,
+        clarifications: structured.clarifications,
+      },
+      topicDrift: structured.topic_drift,
       provider: completion.provider,
       model: completion.model,
       metadata: {
         contextCount: context.length,
         structured: Boolean(parsed),
-        rawContent: parsed ? completion.content : undefined,
+        rawContent: completion.content,
         citations,
-        citedEvidence: parsed?.citations || [],
+        citedEvidence: structured.citations,
         rubric,
         analytics: transcriptAnalytics,
       } as Prisma.InputJsonValue,
@@ -498,6 +552,7 @@ export const generateFinalEvaluation = async (params: {
   );
 
   const parsed = parseFinalEvaluation(completion.content);
+  const structured = parsed || fallbackFinalEvaluation(completion.content);
   const contextTexts = getContextTexts(context);
   const citations = getCitations(context);
   const transcriptAnalytics = analyzeTranscriptQuality({
@@ -506,26 +561,19 @@ export const generateFinalEvaluation = async (params: {
     subject: params.subject,
     topic: params.topic,
   });
-  const confidenceScore =
-    parsed?.confidence_score ??
-    Math.round(
-      transcriptAnalytics.conceptCoverage * 0.4 +
-        transcriptAnalytics.explanationDepth * 0.3 +
-        transcriptAnalytics.semanticConsistency * 0.2 +
-        transcriptAnalytics.speakingConfidence * 0.1
-    );
-  const topicDrift = parsed?.topic_drift ?? transcriptAnalytics.topicDrift;
+  const confidenceScore = structured.confidence_score;
+  const topicDrift = structured.topic_drift;
 
   const evaluation = await prisma.evaluation.create({
     data: {
       sessionId: params.sessionId,
       type: 'FINAL',
-      content: completion.content,
-      summary: parsed?.summary || null,
-      strengths: parsed?.strengths || undefined,
-      weaknesses: parsed?.weaknesses || undefined,
-      missedConcepts: parsed?.missed_concepts || undefined,
-      followUp: parsed?.follow_up || undefined,
+      content: JSON.stringify(structured),
+      summary: structured.summary,
+      strengths: structured.strengths,
+      weaknesses: structured.weaknesses,
+      missedConcepts: structured.missed_concepts,
+      followUp: structured.follow_up,
       confidenceScore,
       topicDrift,
       provider: completion.provider,
@@ -533,9 +581,9 @@ export const generateFinalEvaluation = async (params: {
       metadata: {
         contextCount: context.length,
         parsed: Boolean(parsed),
-        rawContent: parsed ? completion.content : undefined,
+        rawContent: completion.content,
         citations,
-        citedEvidence: parsed?.cited_evidence || [],
+        citedEvidence: structured.cited_evidence,
         rubric,
         analytics: transcriptAnalytics,
       } as Prisma.InputJsonValue,

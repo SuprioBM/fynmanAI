@@ -10,7 +10,23 @@ const optionalNumber = z.preprocess(
   z.coerce.number().optional()
 );
 const optionalBoolean = z.preprocess(
-  emptyToUndefined,
+  value => {
+    const normalized = emptyToUndefined(value);
+    if (typeof normalized !== 'string') {
+      return normalized;
+    }
+
+    const lower = normalized.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(lower)) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'off'].includes(lower)) {
+      return false;
+    }
+
+    return normalized;
+  },
   z.coerce.boolean().optional()
 );
 
@@ -98,7 +114,7 @@ const envSchema = z.object({
   AUDIO_PROCESSING_BACKOFF_MS: optionalNumber,
   AUDIO_PROCESSING_CONCURRENCY: optionalNumber,
   AUDIO_PROCESSING_RESULT_TIMEOUT_MS: optionalNumber,
-  ENABLE_AUDIO_PROCESSING_QUEUE: optionalBoolean,
+  ENABLE_AUDIO_PROCESSING_QUEUE: optionalBoolean.default(false),
   LLM_ANALYSIS_INTERVAL: optionalNumber,
   TRANSCRIPT_WINDOW_MINUTES: optionalNumber,
 

@@ -104,11 +104,12 @@ export const createResourceHandler = async (
         subject,
         topic,
       });
+      const readyResource = await getResourceById(resource.id);
 
       return sendApiSuccess(res, {
         status: 201,
         message: 'Resource ingested',
-        data: { resource, ingest },
+        data: { resource: readyResource || resource, ingest },
       });
     }
 
