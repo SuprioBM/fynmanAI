@@ -14,6 +14,7 @@ import usersRoutes from './routes/user.route.ts';
 import resourceRoutes from './routes/resource.route.ts';
 import sessionRoutes from './routes/session.route.ts';
 import documentParserRoutes from './routes/document-parser.route.ts';
+import healthRoutes from './routes/health.route.ts';
 import { sendApiError, sendApiSuccess } from '#src/utils/api-response.ts';
 
 const app = express();
@@ -72,6 +73,8 @@ app.head('/health', (req, res) => {
     },
   });
 });
+app.use('/health', healthRoutes);
+app.use('/api/health', healthRoutes);
 
 app.get('/api', (req, res) => {
   sendApiSuccess(res, { message: 'Tryora API is running!' });

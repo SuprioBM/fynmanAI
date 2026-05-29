@@ -5,6 +5,7 @@ import {
   createResource,
   deleteResource,
   getResourceById,
+  getResourceStatusCountsForUser,
   listResourcesForUser,
   updateResource,
 } from '#src/services/resource.service.ts';
@@ -18,10 +19,7 @@ const isResourceStatus = (value: unknown): value is ResourceStatus =>
   value === 'READY' ||
   value === 'FAILED';
 
-export const listResourcesHandler = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const listResourcesHandler = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.userId) {
       return sendApiError(res, {
@@ -375,6 +373,41 @@ export const getResourceIngestionStatusHandler = async (
     return sendApiError(res, {
       status: 500,
       message: 'Failed to fetch resource ingestion status',
+    });
+  }
+};
+
+export const getResourceIngestionObservabilityHandler = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.userId) {
+      return sendApiError(res, {
+        status: 401,
+        message: 'User not authenticated',
+      });
+    }
+
+    const [resourceCounts, queueCounts] = await Promise.all([
+      getResourceStatusCountsForUser(req.userId),
+      import('#src/queues/url-ingest.queue.ts').then(({ urlIngestQueue }) =>
+        urlIngestQueue.getCounts()
+      ),
+    ]);
+
+    return sendApiSuccess(res, {
+      data: {
+        resources: resourceCounts,
+        queues: {
+          urlIngest: queueCounts,
+        },
+      },
+    });
+  } catch (error) {
+    return sendApiError(res, {
+      status: 500,
+      message: 'Failed to fetch ingestion observability',
     });
   }
 };

@@ -17,10 +17,10 @@
 
 ## P2 - Reliability And Operations
 
-- [ ] Add combined health checks for database, Redis, Qdrant, queues, STT, parser, and LLM providers.
-- [ ] Move expensive STT/retrieval/LLM operations toward background workers where useful.
-- [ ] Harden audio ingestion with chunk duration validation, ordering, silence handling, and retry behavior.
-- [ ] Add ingestion observability for queued, active, completed, and failed jobs.
+- [x] Add combined health checks for database, Redis, Qdrant, queues, STT, parser, and LLM providers.
+- [x] Move expensive STT/retrieval/LLM operations toward background workers where useful.
+- [x] Harden audio ingestion with chunk duration validation, ordering, silence handling, and retry behavior.
+- [x] Add ingestion observability for queued, active, completed, and failed jobs.
 
 ## P3 - Security And Scale
 

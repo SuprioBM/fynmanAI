@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createResourceHandler,
   deleteResourceHandler,
+  getResourceIngestionObservabilityHandler,
   getResourceIngestionStatusHandler,
   getResourceHandler,
   listResourcesHandler,
@@ -23,6 +24,10 @@ router.use(authMiddleware);
 
 router.get('/', listResourcesHandler);
 router.post('/', validateRequest(CreateResourceSchema), createResourceHandler);
+router.get(
+  '/ingestion/observability',
+  getResourceIngestionObservabilityHandler
+);
 router.get('/:resourceId/ingestion', getResourceIngestionStatusHandler);
 router.post(
   '/:resourceId/retry',

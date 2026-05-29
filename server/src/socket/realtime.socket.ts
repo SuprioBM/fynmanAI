@@ -1,19 +1,22 @@
 import { Server, Socket } from 'socket.io';
 import { verifyAccessToken } from '#src/utils/jwt/tokens.ts';
 import {
-  appendTranscriptChunk,
   createSession,
   endSession,
   getSessionById,
 } from '#src/services/session.service.ts';
-import { transcribeAudioBuffer } from '#src/services/stt.service.ts';
-import { preprocessTranscript } from '#src/services/transcript-preprocess.service.ts';
-import {
-  ensureFinalEvaluation,
-  maybeGenerateRealtimeFeedback,
-} from '#src/services/evaluation.service.ts';
+import { ensureFinalEvaluation } from '#src/services/evaluation.service.ts';
 import logger from '#config/logger.ts';
 import { env } from '#config/env.ts';
+import { audioProcessingQueue } from '#src/queues/audio-processing.queue.ts';
+import {
+  processAudioChunk,
+  type AudioChunkProcessResult,
+} from '#src/services/audio-processing.service.ts';
+
+type AudioPayloadValidation =
+  | { ok: true; sequence?: number; startTimeMs?: number; endTimeMs?: number }
+  | { ok: false; error: string };
 
 const getTokenFromSocket = (socket: Socket): string | null => {
   const authToken = socket.handshake.auth?.token;
@@ -48,6 +51,114 @@ const registerSocketEventAliases = (
       void handler(payload, cb);
     });
   });
+};
+
+const asFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+};
+
+const validateAudioPayload = (
+  socket: Socket,
+  sessionId: string,
+  payload: any
+): AudioPayloadValidation => {
+  const startTimeMs = asFiniteNumber(payload?.startTimeMs);
+  const endTimeMs = asFiniteNumber(payload?.endTimeMs);
+  const durationMs =
+    asFiniteNumber(payload?.durationMs) ??
+    (startTimeMs !== undefined && endTimeMs !== undefined
+      ? endTimeMs - startTimeMs
+      : undefined);
+
+  const minDurationMs = env.AUDIO_MIN_CHUNK_DURATION_MS || 250;
+  const maxDurationMs =
+    env.AUDIO_MAX_CHUNK_DURATION_MS ||
+    Math.max(1, env.AUDIO_CHUNK_DURATION || 5) * 1000;
+
+  if (durationMs !== undefined) {
+    if (durationMs < minDurationMs) {
+      return { ok: false, error: 'Audio chunk duration is too short' };
+    }
+
+    if (durationMs > maxDurationMs) {
+      return { ok: false, error: 'Audio chunk duration is too long' };
+    }
+  }
+
+  if (
+    startTimeMs !== undefined &&
+    endTimeMs !== undefined &&
+    endTimeMs <= startTimeMs
+  ) {
+    return {
+      ok: false,
+      error: 'Audio chunk endTimeMs must be after startTimeMs',
+    };
+  }
+
+  const sequence = asFiniteNumber(payload?.sequence ?? payload?.chunkIndex);
+  if (sequence !== undefined) {
+    const sequenceMap =
+      (socket.data.lastAudioSequenceBySession as Record<string, number>) || {};
+    const previousSequence = sequenceMap[sessionId];
+
+    if (previousSequence !== undefined && sequence <= previousSequence) {
+      return { ok: false, error: 'Audio chunk sequence is out of order' };
+    }
+
+    socket.data.lastAudioSequenceBySession = {
+      ...sequenceMap,
+      [sessionId]: sequence,
+    };
+  }
+
+  const silenceThreshold = env.AUDIO_SILENCE_THRESHOLD;
+  const audioLevel = asFiniteNumber(payload?.audioLevel ?? payload?.rms);
+  if (
+    silenceThreshold !== undefined &&
+    audioLevel !== undefined &&
+    audioLevel <= silenceThreshold
+  ) {
+    return { ok: false, error: 'Audio chunk skipped because it is silent' };
+  }
+
+  return { ok: true, sequence, startTimeMs, endTimeMs };
+};
+
+const emitAudioProcessingResult = (
+  io: Server,
+  result: AudioChunkProcessResult
+) => {
+  if (result.chunk) {
+    io.to(result.sessionId).emit('transcript:chunk', {
+      sessionId: result.sessionId,
+      chunk: result.chunk,
+    });
+    io.to(result.sessionId).emit('transcript_update', {
+      sessionId: result.sessionId,
+      chunk: result.chunk,
+    });
+  }
+
+  if (result.evaluation) {
+    io.to(result.sessionId).emit('analysis:question', {
+      sessionId: result.sessionId,
+      evaluation: result.evaluation,
+    });
+    io.to(result.sessionId).emit('probing_question', {
+      sessionId: result.sessionId,
+      evaluation: result.evaluation,
+    });
+  }
 };
 
 export const registerRealtimeSocket = (io: Server) => {
@@ -168,61 +279,71 @@ export const registerRealtimeSocket = (io: Server) => {
         }
 
         const buffer = Buffer.from(audioBase64, 'base64');
-        const transcript = await transcribeAudioBuffer({
-          buffer,
-          fileName: payload?.fileName || `chunk-${Date.now()}.webm`,
-          mimeType: payload?.mimeType,
-        });
+        const maxBytes = env.AUDIO_MAX_CHUNK_BYTES || 2 * 1024 * 1024;
+        if (!buffer.length) {
+          cb?.({ ok: false, error: 'Audio chunk is empty' });
+          return;
+        }
+
+        if (buffer.length > maxBytes) {
+          cb?.({ ok: false, error: 'Audio chunk is too large' });
+          return;
+        }
+
+        const validation = validateAudioPayload(socket, sessionId, payload);
+        if (validation.ok === false) {
+          cb?.({ ok: false, error: validation.error });
+          return;
+        }
 
         const speakerLabel =
           payload?.speakerLabel || payload?.speaker || payload?.role || 'User';
-        const processedTranscript = preprocessTranscript(
-          {
-            raw: transcript.text,
-            speaker: speakerLabel,
-          },
-          {
-            speakerLabel,
-          }
-        );
-        const cleanedText = processedTranscript.cleanedText;
-
-        const chunk = await appendTranscriptChunk({
+        const audioJob = {
           sessionId,
-          text: cleanedText,
-          startTimeMs: payload?.startTimeMs,
-          endTimeMs: payload?.endTimeMs,
-        });
+          userId: socket.data.userId,
+          audioBase64,
+          fileName: payload?.fileName || `chunk-${Date.now()}.webm`,
+          mimeType: payload?.mimeType,
+          speakerLabel,
+          startTimeMs: validation.startTimeMs,
+          endTimeMs: validation.endTimeMs,
+          sequence: validation.sequence,
+        };
 
-        io.to(sessionId).emit('transcript:chunk', {
-          sessionId,
-          chunk,
-        });
-        io.to(sessionId).emit('transcript_update', {
-          sessionId,
-          chunk,
-        });
-
-        const evaluation = await maybeGenerateRealtimeFeedback({
-          sessionId,
-          subject: session.subject || undefined,
-          topic: session.topic || undefined,
-          resourceIds: session.resources.map(item => item.resourceId),
-          goal: session.goal || undefined,
-        });
-
-        if (evaluation) {
-          io.to(sessionId).emit('analysis:question', {
-            sessionId,
-            evaluation,
-          });
-          io.to(sessionId).emit('probing_question', {
-            sessionId,
-            evaluation,
-          });
+        if (env.ENABLE_AUDIO_PROCESSING_QUEUE === false) {
+          const result = await processAudioChunk(audioJob);
+          emitAudioProcessingResult(io, result);
+          cb?.({ ok: true, chunk: result.chunk, skipped: result.skipped });
+          return;
         }
 
-        cb?.({ ok: true, chunk });
+        const job = await audioProcessingQueue.add(
+          audioJob,
+          `audio:${sessionId}:${validation.sequence ?? Date.now()}`
+        );
+        const timeoutMs = env.AUDIO_PROCESSING_RESULT_TIMEOUT_MS || 30_000;
+
+        try {
+          const result = (await job.waitUntilFinished(
+            audioProcessingQueue.events,
+            timeoutMs
+          )) as AudioChunkProcessResult;
+          emitAudioProcessingResult(io, result);
+          cb?.({
+            ok: true,
+            queued: true,
+            jobId: job.id,
+            chunk: result.chunk,
+            skipped: result.skipped,
+          });
+        } catch (error) {
+          logger.warn('[Realtime] Audio job queued without immediate result', {
+            jobId: job.id,
+            sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          cb?.({ ok: true, queued: true, jobId: job.id });
+        }
       } catch (error) {
         logger.error(`Realtime audio chunk failed: ${String(error)}`);
         cb?.({ ok: false, error: 'Failed to process audio chunk' });

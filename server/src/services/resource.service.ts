@@ -46,6 +46,27 @@ export const listResourcesForUser = async (
   });
 };
 
+export const getResourceStatusCountsForUser = async (userId: string) => {
+  const rows = await prisma.resource.groupBy({
+    by: ['status'],
+    where: { userId },
+    _count: { _all: true },
+  });
+
+  return rows.reduce<Record<ResourceStatus, number>>(
+    (counts, row) => {
+      counts[row.status as ResourceStatus] = row._count._all;
+      return counts;
+    },
+    {
+      PENDING: 0,
+      PROCESSING: 0,
+      READY: 0,
+      FAILED: 0,
+    }
+  );
+};
+
 export const createResource = async (data: CreateResourceInput) => {
   return prisma.resource.create({
     data: {

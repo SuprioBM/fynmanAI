@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import logger from '#src/config/logger.ts';
+import { startAudioProcessingWorker } from '#src/workers/audio-processing.worker.ts';
 import { startUrlIngestWorker } from '#src/workers/url-ingest.worker.ts';
 
 let isShuttingDown = false;
@@ -34,7 +35,9 @@ process.on('SIGTERM', () => {
 const startWorkers = async () => {
   try {
     workers.push(startUrlIngestWorker());
+    workers.push(startAudioProcessingWorker());
     logger.info('[BullMQ] URL ingest worker is running');
+    logger.info('[BullMQ] Audio processing worker is running');
   } catch (error: unknown) {
     logger.error(`[BullMQ] Worker failed to start: ${String(error)}`);
     process.exit(1);
