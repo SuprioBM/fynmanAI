@@ -7,11 +7,22 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => void;
+  uploadLoading?: boolean;
+  uploadError?: string | null;
+  uploadSuccess?: boolean;
 };
 
-export default function UploadModal({ open, onClose, onUpload }: Props) {
+export default function UploadModal({
+  open,
+  onClose,
+  onUpload,
+  uploadLoading = false,
+  uploadError,
+  uploadSuccess,
+}: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Portal needs document to exist (Next.js SSR safety)
   useEffect(() => {
@@ -35,6 +46,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setIsDragging(false);
     const dropped = Array.from(e.dataTransfer.files);
     setFiles((prev) => {
       const existingNames = new Set(prev.map((f) => f.name));
@@ -48,7 +60,6 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
   const handleUpload = () => {
     onUpload(files);
-    onClose();
   };
 
   const getIcon = (name: string) => {
@@ -61,7 +72,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
   const modal = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-9999 flex items-center justify-center"
       style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
       onClick={(e) => {
         // Close on backdrop click
@@ -90,10 +101,18 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
 
         {/* Drop zone */}
         <div
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           className="rounded-lg p-8 text-center flex flex-col items-center gap-3 transition-colors"
-          style={{ border: "2px dashed rgba(70,69,84,0.6)" }}
+          style={{
+            border: isDragging
+              ? "2px dashed rgba(128,131,255,0.8)"
+              : "2px dashed rgba(70,69,84,0.6)",
+          }}
         >
           <span className="material-symbols-outlined text-[#8083ff] text-4xl">
             upload_file
@@ -129,7 +148,7 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
                   <span className="material-symbols-outlined text-[#8083ff] text-[18px]">
                     {getIcon(f.name)}
                   </span>
-                  <span className="text-sm text-[#c0c1ff] truncate max-w-[300px]">
+                  <span className="text-sm text-[#c0c1ff] truncate max-w-75">
                     {f.name}
                   </span>
                   <span className="text-xs text-[#c7c4d7] opacity-40">
@@ -159,17 +178,33 @@ export default function UploadModal({ open, onClose, onUpload }: Props) {
           </button>
           <button
             onClick={handleUpload}
-            disabled={files.length === 0}
+            disabled={files.length === 0 || uploadLoading}
             className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
             style={{
-              background: files.length === 0 ? "rgba(128,131,255,0.3)" : "#8083ff",
-              color: files.length === 0 ? "rgba(255,255,255,0.4)" : "#000",
-              cursor: files.length === 0 ? "not-allowed" : "pointer",
+              background:
+                files.length === 0 || uploadLoading
+                  ? "rgba(128,131,255,0.3)"
+                  : "#8083ff",
+              color:
+                files.length === 0 || uploadLoading
+                  ? "rgba(255,255,255,0.4)"
+                  : "#000",
+              cursor:
+                files.length === 0 || uploadLoading ? "not-allowed" : "pointer",
             }}
           >
-            Upload {files.length > 0 && `(${files.length})`}
+            {uploadLoading ? "Uploading..." : `Upload${files.length > 0 ? ` (${files.length})` : ""}`}
           </button>
         </div>
+
+        {uploadError && (
+          <p className="text-sm text-error text-right">{uploadError}</p>
+        )}
+        {uploadSuccess && !uploadLoading && (
+          <p className="text-sm text-[#c7c4d7] text-right">
+            Upload complete.
+          </p>
+        )}
       </div>
     </div>
   );

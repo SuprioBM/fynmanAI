@@ -1,17 +1,30 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import type { ParsedDocumentResponse } from "@/services/upload.service";
 
 type ResourcesContextType = {
   resources: File[];
+  parsedDocuments: ParsedDocumentResponse[];
+  uploadLoading: boolean;
+  uploadSuccess: boolean;
+  uploadError: string | null;
   addFiles: (files: File[]) => void;
   removeFile: (name: string) => void;
+  setUploadLoading: (value: boolean) => void;
+  setUploadSuccess: (value: boolean) => void;
+  setUploadError: (value: string | null) => void;
+  addParsedDocument: (doc: ParsedDocumentResponse) => void;
 };
 
 const ResourcesContext = createContext<ResourcesContextType | null>(null);
 
 export function SessionResourcesProvider({ children }: { children: ReactNode }) {
   const [resources, setResources] = useState<File[]>([]);
+  const [parsedDocuments, setParsedDocuments] = useState<ParsedDocumentResponse[]>([]);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const addFiles = (files: File[]) => {
     setResources((prev) => {
@@ -24,8 +37,26 @@ export function SessionResourcesProvider({ children }: { children: ReactNode }) 
     setResources((prev) => prev.filter((f) => f.name !== name));
   };
 
+  const addParsedDocument = (doc: ParsedDocumentResponse) => {
+    setParsedDocuments((prev) => [...prev, doc]);
+  };
+
   return (
-    <ResourcesContext.Provider value={{ resources, addFiles, removeFile }}>
+    <ResourcesContext.Provider
+      value={{
+        resources,
+        parsedDocuments,
+        uploadLoading,
+        uploadSuccess,
+        uploadError,
+        addFiles,
+        removeFile,
+        setUploadLoading,
+        setUploadSuccess,
+        setUploadError,
+        addParsedDocument,
+      }}
+    >
       {children}
     </ResourcesContext.Provider>
   );

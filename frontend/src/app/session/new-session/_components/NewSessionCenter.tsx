@@ -6,6 +6,8 @@ import UploadStep from "./UploadStep";
 import ProcessingStep from "./ProcessingStep";
 import BriefStep from "./BriefStep";
 import { useSessionResources } from "../../../../context/Resource/SessionResourcesContext";
+import { useAuth } from "@/context/auth/AuthContext";
+import { uploadDocument, validateUploadFile } from "@/services/upload.service";
 
 type Step = "upload" | "processing" | "brief";
 
@@ -22,7 +24,17 @@ export default function NewSessionCenter() {
   const [stageIndex, setStageIndex] = useState(0);
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const { addFiles } = useSessionResources();
+  const {
+    addFiles,
+    uploadLoading,
+    uploadSuccess,
+    uploadError,
+    setUploadLoading,
+    setUploadSuccess,
+    setUploadError,
+    addParsedDocument,
+  } = useSessionResources();
+  const { accessToken } = useAuth();
 
   useEffect(() => {
     if (step !== "processing") return undefined;
@@ -54,6 +66,9 @@ export default function NewSessionCenter() {
         <UploadStep
           onOpenModal={() => setUploadOpen(true)}
           onProcess={() => setStep("processing")}
+          uploadLoading={uploadLoading}
+          uploadSuccess={uploadSuccess}
+          uploadError={uploadError}
         />
       )}
 
@@ -68,7 +83,43 @@ export default function NewSessionCenter() {
       <UploadModal
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        onUpload={addFiles}
+        onUpload={async (files) => {
+          if (!accessToken) {
+            setUploadError("Sign in to upload files.");
+            setUploadSuccess(false);
+            return;
+          }
+
+          setUploadLoading(true);
+          setUploadError(null);
+          setUploadSuccess(false);
+
+          try {
+            for (const file of files) {
+              const validation = validateUploadFile(file);
+              if (!validation.ok) {
+                throw new Error(validation.message);
+              }
+
+              const result = await uploadDocument({ file, token: accessToken });
+              addParsedDocument(result.data);
+            }
+
+            addFiles(files);
+            setUploadSuccess(true);
+            setUploadOpen(false);
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Upload failed";
+            setUploadError(message);
+            setUploadSuccess(false);
+          } finally {
+            setUploadLoading(false);
+          }
+        }}
+        uploadLoading={uploadLoading}
+        uploadError={uploadError}
+        uploadSuccess={uploadSuccess}
       />
     </div>
   );

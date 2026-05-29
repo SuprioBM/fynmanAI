@@ -5,9 +5,20 @@ import AuthGuardAction from "@/components/auth/AuthActionButton";
 interface UploadStepProps {
   onOpenModal: () => void;
   onProcess: () => void;
+  uploadLoading: boolean;
+  uploadSuccess: boolean;
+  uploadError: string | null;
 }
 
-export default function UploadStep({ onOpenModal, onProcess }: UploadStepProps) {
+export default function UploadStep({
+  onOpenModal,
+  onProcess,
+  uploadLoading,
+  uploadSuccess,
+  uploadError,
+}: UploadStepProps) {
+  const canProcess = uploadSuccess && !uploadLoading;
+
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-8" id="step-upload">
       <div className="flex flex-col gap-2">
@@ -43,13 +54,25 @@ export default function UploadStep({ onOpenModal, onProcess }: UploadStepProps) 
       {/* Process button */}
       <div className="pt-2 flex justify-end">
         <AuthGuardAction
-          className="bg-accent text-on-background py-2 px-8 rounded-lg font-label-md text-label-md hover:brightness-110 transition-all flex items-center gap-2"
-          onAuthenticatedClick={onProcess}
+          className={`bg-accent text-on-background py-2 px-8 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${
+            canProcess ? "hover:brightness-110" : "opacity-50 pointer-events-none"
+          }`}
+          onAuthenticatedClick={canProcess ? onProcess : undefined}
         >
-          Process Session
+          {uploadLoading ? "Uploading" : "Process Session"}
           <span className="material-symbols-outlined text-[18px]">forward</span>
         </AuthGuardAction>
       </div>
+
+      {uploadError && (
+        <p className="text-sm text-error text-right">{uploadError}</p>
+      )}
+
+      {uploadSuccess && !uploadLoading && (
+        <p className="text-sm text-on-surface-variant text-right">
+          Upload complete. You can continue.
+        </p>
+      )}
     </div>
   );
 }
