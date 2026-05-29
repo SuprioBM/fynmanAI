@@ -1,4 +1,4 @@
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { env } from '#config/env.ts';
 import { getS3Client, S3_BUCKET } from '#config/s3.config.ts';
 
@@ -42,6 +42,18 @@ export const uploadBufferToS3 = async (params: {
   );
 
   return { key: params.key, bucket };
+};
+
+export const deleteObjectFromS3 = async (key: string): Promise<void> => {
+  const bucket = requireBucket();
+  const client = getS3Client();
+
+  await client.send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+  );
 };
 
 export const getResourcePublicUrl = (key: string): string | null => {

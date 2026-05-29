@@ -95,8 +95,20 @@ describe('createSession – resource ownership validation', () => {
 
   it('creates session when all resourceIds are owned by the user', async () => {
     mockPrismaResourceFindMany.mockResolvedValue([
-      { id: 'res-1' },
-      { id: 'res-2' },
+      {
+        id: 'res-1',
+        userId: 'user-1',
+        status: 'READY',
+        subject: null,
+        topic: null,
+      },
+      {
+        id: 'res-2',
+        userId: 'user-1',
+        status: 'READY',
+        subject: null,
+        topic: null,
+      },
     ]);
 
     const result = await createSession({
@@ -109,24 +121,31 @@ describe('createSession – resource ownership validation', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           id: { in: ['res-1', 'res-2'] },
-          userId: 'user-1',
         }),
       })
     );
   });
 
   it('throws when a resourceId does not belong to the user', async () => {
-    // Only one of two resources is owned by user-1
-    mockPrismaResourceFindMany.mockResolvedValue([{ id: 'res-1' }]);
+    // res-1 belongs to another user
+    mockPrismaResourceFindMany.mockResolvedValue([
+      {
+        id: 'res-1',
+        userId: 'other-user',
+        status: 'READY',
+        subject: null,
+        topic: null,
+      },
+    ]);
 
     await expect(
       createSession({
         userId: 'user-1',
         resourceIds: ['res-1', 'res-stolen'],
       })
-    ).rejects.toThrow(/not found or not accessible/i);
+    ).rejects.toThrow(/Invalid session resources/i);
 
-    expect(mockPrismaSessionCreate).toHaveBeenCalled();
+    expect(mockPrismaSessionCreate).not.toHaveBeenCalled();
   });
 
   it('throws when none of the resourceIds are owned by the user', async () => {
@@ -137,7 +156,7 @@ describe('createSession – resource ownership validation', () => {
         userId: 'user-1',
         resourceIds: ['other-user-res'],
       })
-    ).rejects.toThrow(/not found or not accessible/i);
+    ).rejects.toThrow(/Invalid session resources/i);
   });
 });
 

@@ -70,6 +70,8 @@ const mockEnsureFinalEvaluation = jest.fn<any>();
 
 jest.unstable_mockModule('#src/services/session.service.ts', () => ({
   getSessionById: mockGetSessionById,
+  getSessionDetailById: jest.fn<any>().mockResolvedValue(null),
+  listSessionsForUser: jest.fn<any>().mockResolvedValue([]),
   createSession: mockCreateSession,
   endSession: mockEndSession,
   appendTranscriptChunk: jest.fn(),
@@ -81,6 +83,7 @@ jest.unstable_mockModule('#src/services/evaluation.service.ts', () => ({
   ensureFinalEvaluation: mockEnsureFinalEvaluation,
   generateRealtimeFeedback: jest.fn(),
   generateFinalEvaluation: jest.fn(),
+  formatEvaluationForClient: jest.fn<any>().mockImplementation((e: any) => e),
 }));
 
 jest.unstable_mockModule(

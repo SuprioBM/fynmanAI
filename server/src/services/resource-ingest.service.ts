@@ -3,6 +3,7 @@ import { generateEmbedding } from '#src/services/ai/ai.service.ts';
 import {
   createEmbeddingRecord,
   createResourceChunk,
+  clearResourceIngestion,
   getResourceById,
   updateResourceStatus,
   updateResourceFields,
@@ -91,12 +92,23 @@ export const ingestResourceText = async (params: {
       throw new Error('No text content to ingest');
     }
 
+    await clearResourceIngestion(params.resourceId);
+
     await updateResourceFields({
       resourceId: params.resourceId,
       parsedText: cleanedText,
       filePath: resource?.filePath || resource?.storageKey || null,
       storageKey: resource?.storageKey || null,
     });
+
+    const sourceMetadata = {
+      sourceType: resource?.sourceType,
+      mimeType: resource?.mimeType,
+      sourceUrl: resource?.sourceUrl,
+      storageKey: resource?.storageKey,
+      filePath: resource?.filePath || resource?.storageKey,
+      resourceMetadata: resource?.metadata,
+    };
 
     const collectionName = getQdrantCollection();
     const firstEmbedding = await generateEmbedding(chunks[0]);
@@ -115,6 +127,7 @@ export const ingestResourceText = async (params: {
           resourceTitle: resource?.title,
           sourceUrl: resource?.sourceUrl,
           storageKey: resource?.storageKey,
+          sourceMetadata,
         },
       },
     ];
@@ -130,8 +143,7 @@ export const ingestResourceText = async (params: {
       metadata: {
         subject,
         topic,
-        sourceUrl: resource?.sourceUrl,
-        storageKey: resource?.storageKey,
+        ...sourceMetadata,
       },
     });
 
@@ -160,6 +172,7 @@ export const ingestResourceText = async (params: {
             resourceTitle: resource?.title,
             sourceUrl: resource?.sourceUrl,
             storageKey: resource?.storageKey,
+            sourceMetadata,
           },
         },
       ]);
@@ -174,8 +187,7 @@ export const ingestResourceText = async (params: {
         metadata: {
           subject,
           topic,
-          sourceUrl: resource?.sourceUrl,
-          storageKey: resource?.storageKey,
+          ...sourceMetadata,
         },
       });
 

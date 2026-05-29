@@ -37,3 +37,14 @@ export const CreateResourceSchema = z
       });
     }
   });
+
+export const UpdateResourceSchema = z.object({
+  title: z.string().min(1, 'Title cannot be empty').optional(),
+  subject: z.string().nullable().optional(),
+  topic: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.any()).nullable().optional(),
+});
+
+export const RetryResourceIngestionSchema = z.object({
+  text: z.string().optional(),
+});

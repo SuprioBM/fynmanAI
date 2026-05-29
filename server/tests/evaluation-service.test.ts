@@ -48,8 +48,16 @@ jest.unstable_mockModule('#src/services/session.service.ts', () => ({
 }));
 
 const mockTrackAnalyticsEvent = jest.fn<any>();
+const mockAnalyzeTranscriptQuality = jest.fn<any>().mockReturnValue({
+  conceptCoverage: 50,
+  explanationDepth: 40,
+  semanticConsistency: 60,
+  speakingConfidence: 70,
+  topicDrift: false,
+});
 jest.unstable_mockModule('#src/services/analytics.service.ts', () => ({
   trackAnalyticsEvent: mockTrackAnalyticsEvent,
+  analyzeTranscriptQuality: mockAnalyzeTranscriptQuality,
 }));
 
 const mockAppendSessionEvent = jest.fn<any>();
@@ -164,6 +172,8 @@ describe('generateFinalEvaluation', () => {
     });
     mockPrismaEvaluationCreate.mockResolvedValue({
       id: 'eval-2',
+      type: 'FINAL',
+      content: JSON.stringify(llmPayload),
       confidenceScore: 100,
     });
 
@@ -194,6 +204,8 @@ describe('generateFinalEvaluation', () => {
     });
     mockPrismaEvaluationCreate.mockResolvedValue({
       id: 'eval-3',
+      type: 'FINAL',
+      content: JSON.stringify(llmPayload),
       confidenceScore: 0,
     });
 
@@ -206,19 +218,25 @@ describe('generateFinalEvaluation', () => {
     );
   });
 
-  it('stores null confidenceScore when LLM returns unparseable JSON', async () => {
+  it('derives confidenceScore from analytics when LLM returns unparseable JSON', async () => {
     mockGenerateChatCompletion.mockResolvedValue({
       content: 'Here is some unstructured text with no JSON.',
       provider: 'openai',
       model: 'gpt-4o',
     });
-    mockPrismaEvaluationCreate.mockResolvedValue({ id: 'eval-4' });
+    mockPrismaEvaluationCreate.mockResolvedValue({
+      id: 'eval-4',
+      type: 'FINAL',
+      content: 'Here is some unstructured text with no JSON.',
+    });
 
     await generateFinalEvaluation({ sessionId: 'sess-1' });
 
+    // When parsing fails, confidenceScore is derived from analyzeTranscriptQuality
+    // (50*0.4 + 40*0.3 + 60*0.2 + 70*0.1) = 20+12+12+7 = 51
     expect(mockPrismaEvaluationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ confidenceScore: null }),
+        data: expect.objectContaining({ confidenceScore: 51 }),
       })
     );
   });
@@ -230,7 +248,12 @@ describe('generateFinalEvaluation', () => {
       provider: 'openai',
       model: 'gpt-4o',
     });
-    mockPrismaEvaluationCreate.mockResolvedValue({ id: 'eval-5' });
+    mockPrismaEvaluationCreate.mockResolvedValue({
+      id: 'eval-5',
+      type: 'FINAL',
+      content:
+        '{"summary":"ok","strengths":[],"weaknesses":[],"missed_concepts":[],"follow_up":[],"confidence_score":60,"topic_drift":false}',
+    });
 
     await generateFinalEvaluation({ sessionId: 'sess-1' });
 
@@ -264,11 +287,17 @@ describe('getLatestFinalEvaluation', () => {
 
 describe('ensureFinalEvaluation', () => {
   it('returns existing evaluation without generating a new one', async () => {
-    const existing = { id: 'eval-existing', type: 'FINAL' };
+    const existing = {
+      id: 'eval-existing',
+      type: 'FINAL',
+      content:
+        '{"summary":"ok","strengths":[],"weaknesses":[],"missed_concepts":[],"follow_up":[],"confidence_score":70,"topic_drift":false}',
+    };
     mockPrismaEvaluationFindFirst.mockResolvedValue(existing);
 
     const result = await ensureFinalEvaluation({ sessionId: 'sess-1' });
-    expect(result).toEqual(existing);
+    expect(result).toBeTruthy();
+    expect(result).toMatchObject({ id: 'eval-existing' });
     expect(mockGenerateChatCompletion).not.toHaveBeenCalled();
   });
 
@@ -285,6 +314,8 @@ describe('ensureFinalEvaluation', () => {
     mockPrismaEvaluationCreate.mockResolvedValue({
       id: 'eval-new',
       type: 'FINAL',
+      content:
+        '{"summary":"ok","strengths":[],"weaknesses":[],"missed_concepts":[],"follow_up":[],"confidence_score":50,"topic_drift":false}',
     });
 
     const result = await ensureFinalEvaluation({ sessionId: 'sess-1' });
