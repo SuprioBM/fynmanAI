@@ -19,20 +19,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="bg-[#0b1220] text-[#e5e7eb] h-screen w-full overflow-hidden fade-in">
       <div className="flex h-full w-full">
         <aside className="hidden md:flex flex-col py-6 px-4 gap-2 bg-surface-container-low text-primary fixed left-0 top-0 h-screen w-70 border-r border-outline-variant">
-          <div className="flex flex-col gap-1 mb-6">
-            <span className="font-headline-md text-headline-md text-on-surface">
-              <Image
-                src={topLogoUrl}
-                alt="FymenAI Logo"
-                width={140}
-                height={32}
-                className="h-8 w-auto object-contain"
-              />
+          <Link href="/" className="flex items-center gap-3 mb-6">
+            <Image
+              src={topLogoUrl}
+              alt="FymenAI Logo"
+              width={48}
+              height={48}
+              className="h-12 w-12 object-contain"
+            />
+            <span className="text-2xl font-semibold text-on-surface tracking-tight">
+              FymenAI
             </span>
-            <span className="font-label-md text-label-md text-on-surface-variant">
-              Cognitive System
-            </span>
-          </div>
+          </Link>
           <Link
             href="/session/new-session"
             className="bg-[#4f6bff] text-[#e5e7eb] py-4 px-6 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 mb-6 active:scale-95 transition-transform"
@@ -63,7 +61,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 <MobileNav
   leftItems={[
     { icon: "home", label: "Home", href: "/dashboard" },
-    { icon: "mic", label: "Voice Sessions", href: "/session/active-session", filled: true },
+    { icon: "folder_open", label: "Resources", href: "/session", filled: true },
   ]}
   centerButton={{ icon: "add", href: "/session/new-session" }}
   rightItems={[

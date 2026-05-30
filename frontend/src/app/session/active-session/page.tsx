@@ -16,7 +16,7 @@ export default function SessionActive() {
   }, [user, isLoading, router]);
 
   if (isLoading || !user) {
-    return null; // or loader
+    return null;
   }
 
   return <ActiveSessionCenter />;
