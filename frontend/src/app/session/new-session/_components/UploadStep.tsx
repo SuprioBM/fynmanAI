@@ -54,7 +54,7 @@ export default function UploadStep({
       {/* Process button */}
       <div className="pt-2 flex justify-end">
         <AuthGuardAction
-          className={`bg-accent text-on-background py-2 px-8 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${
+          className={`border border-outline-variant bg-accent text-on-background py-2 px-8 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${
             canProcess ? "hover:brightness-110" : "opacity-50 pointer-events-none"
           }`}
           onAuthenticatedClick={canProcess ? onProcess : undefined}

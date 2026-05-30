@@ -120,16 +120,16 @@ export default function BriefStep({ onReset }: BriefStepProps) {
 
       <div className="pt-6 flex justify-end gap-4 mb-8 md:mb-0">
         <AuthGuardAction
-          className="border border-outline-variant text-on-surface-variant py-2 px-8 rounded-lg"
+          className="border border-outline-variant text-on-surface-variant py-2 px-8 rounded-lg transition-all hover:border-on-surface-variant hover:text-on-surface"
           onAuthenticatedClick={onReset}
         >
           Reset Session
         </AuthGuardAction>
 
         <AuthGuardAction
-          className={`bg-accent text-on-background py-2 px-8 rounded-lg flex items-center gap-2 ${
+          className={`border border-outline-variant bg-accent text-on-background py-2 px-8 rounded-lg flex items-center gap-2 transition-all ${
             beginLoading ? "opacity-60 pointer-events-none" : ""
-          }`}
+          } ${beginLoading ? "" : "hover:brightness-110"}`}
           onAuthenticatedClick={handleBegin}
         >
           {beginLoading ? "Starting..." : "Begin Session"}
