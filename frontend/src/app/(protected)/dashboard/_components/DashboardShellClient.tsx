@@ -21,12 +21,7 @@ export default function DashboardShellClient({
 
   return (
     <>
-
-    <div className="flex md:hidden lg:hidden">
-      <TopNav />
-    </div>
-
-      <header
+       <header
         className={
           isDashboard
             ? "fixed top-0 left-0 md:left-70 right-0 h-12 bg-[#0e1626] border-b border-[#273244] px-6 items-center justify-between z-40 hidden md:flex" 

@@ -6,6 +6,7 @@ import DashboardNav from "./DashboardNav";
 import DashboardShellClient from "./DashboardShellClient";
 import { DashboardDataProvider } from "./DashboardDataProvider";
 import MobileNav from "../../../../components/ui/MobileNav";
+import  TopNav  from "@/components/landing/TopNav";
 
 const topLogoUrl =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuA15na-r3u-cNsiPUPABWuRoM1JD0OUSQZKW2jTp6J-Vnpn4oea-IR-NFPC-joMbkanu66lFhcC6O7mL3IKcIOz4mMzHVAUa9EMoPVJtKjXoDxG157iL0MfehVISzfDCHzqlYvZ-RamqYHkqGGhma9heXJ_7lYCpGzZyHwNINQYUf6NUOy5EY2EfQI5f7Bvta10HLy4JvlU94WfCaXX2g9zRuDU9wnBN962x9WBDq0q_uh0GNxqn38sKir9kTtIoxisHpSSGXOzLIPL";
@@ -16,8 +17,12 @@ type DashboardLayoutProps = {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
+
     <div className="bg-[#0b1220] text-[#e5e7eb] h-screen w-full overflow-hidden fade-in">
       <div className="flex h-full w-full">
+        <div className="flex md:hidden">
+          <TopNav />
+        </div>
         <aside className="hidden md:flex flex-col py-6 px-4 gap-2 bg-surface-container-low text-primary fixed left-0 top-0 h-screen w-70 border-r border-outline-variant">
           <Link href="/" className="flex items-center gap-3 mb-6">
             <Image
@@ -52,9 +57,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </aside>
 
         <div className="flex-1 ml-0 md:ml-70 relative">
+            <DashboardDataProvider>
           <DashboardShellClient>
-            <DashboardDataProvider>{children}</DashboardDataProvider>
+              {children}
           </DashboardShellClient>
+              </DashboardDataProvider>
         </div>
       </div>
 

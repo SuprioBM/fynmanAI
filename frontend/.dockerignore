@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.turbo/
+coverage/
+dist/
+*.log
+.env*
+Dockerfile*
+docker-compose*
+.dockerignore
+.git/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

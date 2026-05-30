@@ -8,14 +8,14 @@ export default function SiteFooter() {
       <div className="max-w-360 mx-auto grid grid-cols-1 md:grid-cols-3 gap-16">
         <div>
           <span className="font-headline-md text-headline-md font-bold tracking-tighter mb-6 block">
-            NeuraVault
+            FymenAI
           </span>
           <p className="font-body-sm text-body-sm text-[#c7c4d7] mb-8 max-w-xs">
             The elite intelligence layer for modern researchers and architects of
             information. Built for privacy, speed, and cognitive clarity.
           </p>
           <p className="font-label-mono text-[10px] text-[#908fa0] opacity-50">
-            © 2024 NEURAVAULT SYSTEMS. ALL RIGHTS RESERVED.
+            © 2024 FYMENAI SYSTEMS. ALL RIGHTS RESERVED.
           </p>
         </div>
 

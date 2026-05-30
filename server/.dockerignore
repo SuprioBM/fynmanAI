@@ -16,6 +16,12 @@ yarn-error.log*
 Dockerfile*
 docker-compose*
 .dockerignore
+.venv-markitdown/
+.markitdown-src/
+
+# Python
+__pycache__/
+*.pyc
 
 # Documentation
 README.md
