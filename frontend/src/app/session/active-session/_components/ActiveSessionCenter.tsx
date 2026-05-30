@@ -165,6 +165,7 @@ export default function ActiveSessionCenter() {
         onMicClick={handleMicClick}
         onStopClick={handleStopClick}
         onKeyboardClick={handleKeyboardClick}
+        isRecording={isRecording}
       />
     </section>
   );

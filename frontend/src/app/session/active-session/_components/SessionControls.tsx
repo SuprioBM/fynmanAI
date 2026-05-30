@@ -2,12 +2,14 @@ interface SessionControlsProps {
   onMicClick: () => void;
   onStopClick: () => void;
   onKeyboardClick: () => void;
+  isRecording: boolean;
 }
 
 export default function SessionControls({
   onMicClick,
   onStopClick,
   onKeyboardClick,
+  isRecording,
 }: SessionControlsProps) {
   return (
     <div className="absolute -bottom-15 w-full hidden md:flex justify-center">
@@ -27,10 +29,15 @@ export default function SessionControls({
         </button>
 
         <button
-          className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
-          onClick={onStopClick}
+          className={`material-symbols-outlined transition-colors ${
+            isRecording
+              ? "text-on-surface-variant hover:text-primary"
+              : "text-on-surface-variant/70 cursor-default"
+          }`}
+          onClick={isRecording ? onStopClick : undefined}
+          aria-label={isRecording ? "Stop recording" : "Start recording"}
         >
-          stop_circle
+          {isRecording ? "stop_circle" : "play_circle"}
         </button>
       </div>
     </div>
